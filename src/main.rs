@@ -1,7 +1,7 @@
 use std::{error::Error, fs};
 
 use image::{Rgb, RgbImage};
-use zen::{Bgr555, Palette};
+use zen::graphics::Palette;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let palette_bytes = fs::read("/home/rondao/dev/rust/snes_data/Crateria.tpl")?;
