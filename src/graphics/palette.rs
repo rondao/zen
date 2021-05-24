@@ -2,7 +2,7 @@ use std::{convert::TryInto, error::Error, fmt};
 
 #[derive(Debug, Default, Clone)]
 pub struct Palette {
-    sub_palettes: [SubPalette; 16],
+    pub sub_palettes: [SubPalette; 16],
 }
 
 /// Palette format reference: https://georgjz.github.io/snesaa03/
@@ -105,6 +105,17 @@ impl Bgr555 {
     }
 }
 
+impl From<Rgb888> for Bgr555 {
+    fn from(color: Rgb888) -> Self {
+        Self {
+            r: color.r >> 3,
+            g: color.g >> 3,
+            b: color.b >> 3,
+            u: 0,
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Rgb888 {
     pub r: u8,
@@ -112,9 +123,15 @@ pub struct Rgb888 {
     pub b: u8,
 }
 
+impl From<Bgr555> for Rgb888 {
+    fn from(color: Bgr555) -> Self {
+        (&color).into()
+    }
+}
+
 impl From<&Bgr555> for Rgb888 {
     fn from(color: &Bgr555) -> Self {
-        Rgb888 {
+        Self {
             r: color.r << 3,
             g: color.g << 3,
             b: color.b << 3,
