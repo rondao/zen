@@ -1,9 +1,11 @@
-pub fn decompress_lz5(source: &[u8]) -> Vec<u8> {
+use std::{error::Error, fmt};
+
+pub fn decompress_lz5(source: &[u8]) -> Result<Vec<u8>, Lz5Error> {
     let mut source = source.into_iter();
     let mut output = Vec::new();
 
     loop {
-        let data = *source.next().unwrap();
+        let data = *source.next().ok_or(Lz5Error)?;
 
         // End of file data = 0xFF
         if data == 0b1111_1111 {
@@ -16,8 +18,12 @@ pub fn decompress_lz5(source: &[u8]) -> Vec<u8> {
             //  CCC = Actual command for operation.
             //  BB_BBBB_BBBB = 10 bits for number of bytes to operate.
             (
+                // Command:
                 (data & 0b0001_1100) << 3,
-                ((data as usize & 0b0000_0011) << 8) + (*source.next().unwrap() as usize) + 1,
+                // Number of Bytes:
+                ((data as usize & 0b0000_0011) << 8)
+                    + (*source.next().ok_or(Lz5Error)? as usize)
+                    + 1,
             )
         } else {
             // Normal command = CCCB_BBBB (One Byte)
@@ -30,26 +36,26 @@ pub fn decompress_lz5(source: &[u8]) -> Vec<u8> {
             0x00 => direct_copy(&mut source, number_of_bytes),
             0x20 => byte_fill(&mut source, number_of_bytes),
             0x40 => word_fill(&mut source, number_of_bytes),
-            0x60 => incrementing_fill(&mut source, number_of_bytes),
+            0x60 => incrementing_fill(&mut source, number_of_bytes)?,
             0x80..=0xBF => offset_dictionary(
                 &mut source,
                 &output,
                 number_of_bytes,
                 (command & 0b0010_0000) == 0b0010_0000,
-            ),
+            )?,
             0xC0..=0xE0 => sliding_dictionary(
                 &mut source,
                 &output,
                 number_of_bytes,
                 (command & 0b0010_0000) == 0b0010_0000,
-            ),
-            _ => panic!("Invalid command for decompression."),
+            )?,
+            _ => return Err(Lz5Error),
         };
 
         output.extend(decompressed_data);
     }
 
-    output
+    Ok(output)
 }
 
 /// Copy 'number_of_bytes' from 'source' as is. Basically these bytes were not compressed.
@@ -83,9 +89,9 @@ fn word_fill<'s>(source: &mut impl Iterator<Item = &'s u8>, number_of_bytes: usi
 fn incrementing_fill<'s>(
     source: &mut impl Iterator<Item = &'s u8>,
     number_of_bytes: usize,
-) -> Vec<u8> {
-    let data = *source.next().unwrap();
-    (data..=(data - 1) + number_of_bytes as u8).collect()
+) -> Result<Vec<u8>, Lz5Error> {
+    let data = *source.next().ok_or(Lz5Error)?;
+    Ok((data..=(data - 1) + number_of_bytes as u8).collect())
 }
 
 /// Copy a 'number_of_bytes' from 'output' starting at a two bytes 'offset'.
@@ -94,9 +100,12 @@ fn offset_dictionary<'s>(
     output: &Vec<u8>,
     number_of_bytes: usize,
     invert: bool,
-) -> Vec<u8> {
-    let offset = u16::from_le_bytes([*source.next().unwrap(), *source.next().unwrap()]) as usize;
-    copy_dictionary(&output[offset..], number_of_bytes, invert)
+) -> Result<Vec<u8>, Lz5Error> {
+    let offset = u16::from_le_bytes([
+        *source.next().ok_or(Lz5Error)?,
+        *source.next().ok_or(Lz5Error)?,
+    ]) as usize;
+    Ok(copy_dictionary(&output[offset..], number_of_bytes, invert))
 }
 
 /// Copy a 'number_of_bytes' from 'output' starting at 'output.len()' minus the next byte.
@@ -105,9 +114,9 @@ fn sliding_dictionary<'s>(
     output: &Vec<u8>,
     number_of_bytes: usize,
     invert: bool,
-) -> Vec<u8> {
-    let offset = output.len() - *source.next().unwrap() as usize;
-    copy_dictionary(&output[offset..], number_of_bytes, invert)
+) -> Result<Vec<u8>, Lz5Error> {
+    let offset = output.len() - *source.next().ok_or(Lz5Error)? as usize;
+    Ok(copy_dictionary(&output[offset..], number_of_bytes, invert))
 }
 
 /// Copy a 'number_of_bytes' from 'offseted_output', inverting all bits if required.
@@ -121,5 +130,21 @@ fn copy_dictionary(offseted_output: &[u8], number_of_bytes: usize, invert: bool)
         decompressed_data.map(|value| !value).collect()
     } else {
         decompressed_data.collect()
+    }
+}
+
+pub struct Lz5Error;
+
+impl Error for Lz5Error {}
+
+impl fmt::Display for Lz5Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Failed to decompress data using LZ5 algorithm.")
+    }
+}
+
+impl fmt::Debug for Lz5Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Failed to decompress data using LZ5 algorithm.")
     }
 }

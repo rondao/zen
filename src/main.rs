@@ -5,29 +5,28 @@ use zen::{compress, graphics::palette};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let palette_compressed = fs::read("/home/rondao/dev/rust/snes_data/Crateria.tpl.bin")?;
-    let palette_decompressed = fs::read("/home/rondao/dev/rust/snes_data/Crateria.tpl")?;
     assert_eq!(
-        compress::decompress_lz5(&palette_compressed),
-        palette_decompressed
+        compress::decompress_lz5(&palette_compressed)?,
+        fs::read("/home/rondao/dev/rust/snes_data/Crateria.tpl")?
     );
     assert_eq!(
         compress::decompress_lz5(&fs::read(
             "/home/rondao/dev/rust/snes_data/Crateria.gfx.bin"
-        )?),
+        )?)?,
         fs::read("/home/rondao/dev/rust/snes_data/Crateria.gfx")?
     );
     assert_eq!(
-        compress::decompress_lz5(&fs::read("/home/rondao/dev/rust/snes_data/CRE.gfx.bin")?),
+        compress::decompress_lz5(&fs::read("/home/rondao/dev/rust/snes_data/CRE.gfx.bin")?)?,
         fs::read("/home/rondao/dev/rust/snes_data/CRE.gfx")?
     );
     assert_eq!(
         compress::decompress_lz5(&fs::read(
             "/home/rondao/dev/rust/snes_data/Crateria.level.bin"
-        )?),
+        )?)?,
         fs::read("/home/rondao/dev/rust/snes_data/Crateria.level")?
     );
 
-    let palette = palette::from_bytes(&palette_decompressed)?;
+    let palette = palette::from_bytes(&compress::decompress_lz5(&palette_compressed)?)?;
     let mut palette_colors = palette.to_colors().into_iter();
 
     let mut img: RgbImage = RgbImage::new(16, 16);
