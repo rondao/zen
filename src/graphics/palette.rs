@@ -139,10 +139,15 @@ impl From<&Bgr555> for Rgb888 {
     }
 }
 
-#[derive(Debug)]
 pub struct PaletteParseError;
 
 impl fmt::Display for PaletteParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Failed to parse byte data into palette.")
+    }
+}
+
+impl fmt::Debug for PaletteParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Failed to parse byte data into palette.")
     }

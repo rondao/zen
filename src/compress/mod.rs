@@ -1,5 +1,6 @@
 use std::{error::Error, fmt};
 
+/// Reference: http://patrickjohnston.org/bank/80#fB0FF
 pub fn decompress_lz5(source: &[u8]) -> Result<Vec<u8>, Lz5Error> {
     let mut source = source.into_iter();
     let mut output = Vec::new();
