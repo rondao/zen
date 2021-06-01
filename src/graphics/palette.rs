@@ -1,4 +1,6 @@
-use std::{convert::TryInto, error::Error, fmt};
+use std::convert::TryInto;
+
+use super::ParseError;
 
 #[derive(Debug, Default, Clone)]
 pub struct Palette {
@@ -6,22 +8,22 @@ pub struct Palette {
 }
 
 /// Palette format reference: https://georgjz.github.io/snesaa03/
-pub fn from_bytes(mut bytes: &[u8]) -> Result<Palette, PaletteParseError> {
-    let bytes_per_color = if bytes[..3] == *b"TPL" {
+pub fn from_bytes(mut source: &[u8]) -> Result<Palette, ParseError> {
+    let bytes_per_color = if source[..3] == *b"TPL" {
         // If bytes contain 'TPL' header, extract type.
-        let tpl_type = bytes[4];
-        bytes = &bytes[4..];
+        let tpl_type = source[4];
+        source = &source[4..];
 
         match tpl_type {
             0x00 => 3,
             0x02 => 2,
-            _ => return Err(PaletteParseError),
+            _ => return Err(ParseError),
         }
     } else {
         2 // SNES Default.
     };
 
-    let sub_palettes: Result<Vec<_>, _> = bytes
+    let sub_palettes: Result<Vec<_>, _> = source
         .chunks(COLORS_BY_SUB_PALETTE * bytes_per_color)
         .map(|sub_palette_bytes| {
             // Try creating a sub palette.
@@ -47,7 +49,7 @@ pub fn from_bytes(mut bytes: &[u8]) -> Result<Palette, PaletteParseError> {
         })
     } else {
         // Palette need exact 16 subpalettes.
-        Err(PaletteParseError)
+        Err(ParseError)
     }
 }
 
@@ -83,7 +85,7 @@ pub struct Bgr555 {
 
 impl Bgr555 {
     /// Palette format reference: https://georgjz.github.io/snesaa03/
-    fn from_bytes(source: &[u8]) -> Result<Self, PaletteParseError> {
+    fn from_bytes(source: &[u8]) -> Result<Self, ParseError> {
         match source.len() {
             2 => {
                 let two_bytes = u16::from_le_bytes(source.try_into().unwrap());
@@ -100,7 +102,7 @@ impl Bgr555 {
                 g: source[1] >> 3 as u8,
                 b: source[2] >> 3 as u8,
             }),
-            _ => Err(PaletteParseError),
+            _ => Err(ParseError),
         }
     }
 }
@@ -138,19 +140,3 @@ impl From<&Bgr555> for Rgb888 {
         }
     }
 }
-
-pub struct PaletteParseError;
-
-impl fmt::Display for PaletteParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Failed to parse byte data into palette.")
-    }
-}
-
-impl fmt::Debug for PaletteParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Failed to parse byte data into palette.")
-    }
-}
-
-impl Error for PaletteParseError {}
