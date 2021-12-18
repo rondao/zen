@@ -1,68 +1,37 @@
-use std::{error::Error, fs, usize};
+use std::{error::Error, fs};
 
-use image::{Rgb, RgbImage};
+use ::image::RgbImage;
 use zen::{
     compress,
-    graphics::{gfx, palette, Rgb888},
+    graphics::{gfx, palette},
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let palette_compressed = fs::read("/home/rondao/dev/rust/snes_data/Crateria.tpl.bin")?;
+    let palette_compressed = fs::read("/home/rondao/dev/snes_data/Crateria.tpl.bin")?;
     assert_eq!(
         compress::decompress_lz5(&palette_compressed)?,
-        fs::read("/home/rondao/dev/rust/snes_data/Crateria.tpl")?
+        fs::read("/home/rondao/dev/snes_data/Crateria.tpl")?
     );
-    let gfx_compressed = fs::read("/home/rondao/dev/rust/snes_data/Crateria.gfx.bin")?;
+    let gfx_compressed = fs::read("/home/rondao/dev/snes_data/Crateria.gfx.bin")?;
     assert_eq!(
         compress::decompress_lz5(&gfx_compressed)?,
-        fs::read("/home/rondao/dev/rust/snes_data/Crateria.gfx")?
+        fs::read("/home/rondao/dev/snes_data/Crateria.gfx")?
     );
     assert_eq!(
-        compress::decompress_lz5(&fs::read("/home/rondao/dev/rust/snes_data/CRE.gfx.bin")?)?,
-        fs::read("/home/rondao/dev/rust/snes_data/CRE.gfx")?
+        compress::decompress_lz5(&fs::read("/home/rondao/dev/snes_data/CRE.gfx.bin")?)?,
+        fs::read("/home/rondao/dev/snes_data/CRE.gfx")?
     );
     assert_eq!(
-        compress::decompress_lz5(&fs::read(
-            "/home/rondao/dev/rust/snes_data/Crateria.level.bin"
-        )?)?,
-        fs::read("/home/rondao/dev/rust/snes_data/Crateria.level")?
+        compress::decompress_lz5(&fs::read("/home/rondao/dev/snes_data/Crateria.level.bin")?)?,
+        fs::read("/home/rondao/dev/snes_data/Crateria.level")?
     );
 
     let palette = palette::from_bytes(&compress::decompress_lz5(&palette_compressed)?)?;
-    let mut palette_colors = palette.to_colors().into_iter();
-
-    let mut img: RgbImage = RgbImage::new(16, 16);
-    for y in 0..16 {
-        for x in 0..16 {
-            let color = palette_colors.next().unwrap();
-            img.put_pixel(x, y, Rgb([color.r, color.g, color.b]));
-        }
-    }
-    img.save("/home/rondao/palette.png")?;
+    RgbImage::from(&palette).save("/home/rondao/dev/snes_data/palette.png")?;
 
     let gfx = gfx::from_4bpp(&compress::decompress_lz5(&gfx_compressed)?);
-
-    let mut img: RgbImage = RgbImage::new(16 * 8, gfx.tiles.len() as u32);
-    for (tile_num, tile) in gfx.tiles.iter().enumerate() {
-        // Position of the Tile8 we are drawing.
-        let tx = (tile_num % 16) * 8;
-        let ty = (tile_num / 16) * 8;
-
-        // Drawing the 8 * 8 pixels of a Tile8.
-        for tpx in 0..8 {
-            for tpy in 0..8 {
-                let idx_color = tile.colors[tpx + tpy * 8] as usize;
-                let color: Rgb888 = palette.sub_palettes[4].colors[idx_color].into();
-
-                img.put_pixel(
-                    (tx + tpx) as u32,
-                    (ty + tpy) as u32,
-                    Rgb([color.r, color.g, color.b]),
-                );
-            }
-        }
-    }
-    img.save("/home/rondao/gfx.png")?;
+    gfx.to_image(palette, 4)
+        .save("/home/rondao/dev/snes_data/gfx.png")?;
 
     Ok(())
 }
