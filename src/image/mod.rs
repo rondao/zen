@@ -18,7 +18,7 @@ impl From<&Palette> for RgbImage {
 }
 
 impl Gfx {
-    pub fn to_image(&self, palette: Palette, sub_palette: usize) -> RgbImage {
+    pub fn to_image(&self, palette: &Palette, sub_palette: usize) -> RgbImage {
         let mut img: RgbImage = RgbImage::new(16 * 8, self.tiles.len() as u32);
         for (tile_num, tile) in self.tiles.iter().enumerate() {
             // Position of the Tile8 we are drawing.
