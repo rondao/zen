@@ -1,6 +1,6 @@
 use std::convert::TryInto;
 
-use super::ParseError;
+use crate::ParseError;
 
 #[derive(Debug, Default, Clone)]
 pub struct Palette {
@@ -12,7 +12,7 @@ pub fn from_bytes(mut source: &[u8]) -> Result<Palette, ParseError> {
     let bytes_per_color = if source[..3] == *b"TPL" {
         // If bytes contain 'TPL' header, extract type.
         let tpl_type = source[4];
-        source = &source[4..];
+        source = &source[5..];
 
         match tpl_type {
             0x00 => 3,

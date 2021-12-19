@@ -5,7 +5,7 @@ pub struct Gfx {
     pub tiles: Vec<Tile8>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Tile8 {
     pub colors: [u8; 64],
 }
