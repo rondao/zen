@@ -5,7 +5,7 @@ use crate::{
         gfx::{Gfx, Tile8},
         Palette, Rgb888,
     },
-    super_metroid::tileset::Tileset,
+    super_metroid::{room::Room, tileset::Tileset},
 };
 
 impl From<&Palette> for RgbImage {
@@ -82,4 +82,43 @@ pub fn tileset_to_image(tileset: &Tileset, palette: &Palette, graphics: &Gfx) ->
         }
     }
     img
+}
+
+impl Room {
+    pub fn to_image(&self, tileset: &Tileset, palette: &Palette, graphics: &Gfx) -> RgbImage {
+        let mut img: RgbImage = RgbImage::new(9 * 16 * 16, 5 * 16 * 16);
+        for (index, block) in self.layer1.iter().enumerate() {
+            let tileset_tile = block.block_number as usize * 4;
+            let mut tiles: Vec<_> = tileset[tileset_tile..tileset_tile + 4]
+                .iter()
+                .copied()
+                .collect();
+
+            if block.x_flip {
+                tiles.swap(0, 1);
+                tiles.swap(2, 3);
+            }
+            if block.y_flip {
+                tiles.swap(0, 2);
+                tiles.swap(1, 3);
+            }
+
+            // Each block is composed of 4 smaller 'tile8'.
+            for t in 0..4 {
+                let tile = tiles[t];
+                let tile8 = &graphics.tiles[tile.gfx_index as usize];
+                tile8.draw(
+                    &mut img,
+                    (
+                        (index % (9 * 16)) * 16 + (t % 2) * 8,
+                        (index / (9 * 16)) * 16 + (t / 2) * 8,
+                    ),
+                    (tile.x_flip ^ block.x_flip, tile.y_flip ^ block.y_flip),
+                    palette,
+                    tile.sub_palette as usize,
+                );
+            }
+        }
+        img
+    }
 }

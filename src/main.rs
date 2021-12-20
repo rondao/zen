@@ -8,7 +8,7 @@ use zen::{
         palette,
     },
     image::tileset_to_image,
-    super_metroid::tileset,
+    super_metroid::{room, tileset},
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -68,6 +68,19 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     tileset_to_image(&cre_crateria_tileset, &palette, &gfx_cre)
         .save("/home/rondao/dev/snes_data/cre_crateria_tileset.png")?;
+
+    // Crateria Room
+    let crateria_room_compressed = fs::read("/home/rondao/dev/snes_data/Crateria.room.bin")?;
+    assert_eq!(
+        compress::decompress_lz5(&crateria_room_compressed)?,
+        fs::read("/home/rondao/dev/snes_data/Crateria.room")?
+    );
+
+    let crateria_room =
+        room::from_bytes(&compress::decompress_lz5(&crateria_room_compressed)?, true);
+    crateria_room
+        .to_image(&cre_crateria_tileset, &palette, &gfx_cre)
+        .save("/home/rondao/dev/snes_data/crateria.room.png")?;
 
     Ok(())
 }
