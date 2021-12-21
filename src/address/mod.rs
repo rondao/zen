@@ -1,7 +1,10 @@
 // Reference: https://en.m.wikibooks.org/wiki/Super_NES_Programming/SNES_memory_map
+#[derive(Debug, Default, Clone)]
 pub struct LoRom {
     pub address: usize,
 }
+
+#[derive(Debug, Default, Clone)]
 pub struct Pc {
     pub address: usize,
 }

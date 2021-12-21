@@ -5,7 +5,7 @@ use crate::{
         gfx::{Gfx, Tile8},
         Palette, Rgb888,
     },
-    super_metroid::{room::Room, tileset::Tileset},
+    super_metroid::{level_data::LevelData, tileset::Tileset},
 };
 
 impl From<&Palette> for RgbImage {
@@ -84,7 +84,7 @@ pub fn tileset_to_image(tileset: &Tileset, palette: &Palette, graphics: &Gfx) ->
     img
 }
 
-impl Room {
+impl LevelData {
     pub fn to_image(&self, tileset: &Tileset, palette: &Palette, graphics: &Gfx) -> RgbImage {
         let mut img: RgbImage = RgbImage::new(9 * 16 * 16, 5 * 16 * 16);
         for (index, block) in self.layer1.iter().enumerate() {

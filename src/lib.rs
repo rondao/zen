@@ -11,8 +11,8 @@ pub struct Rom {
 }
 
 impl Rom {
-    pub fn read(&self, start: Pc, end: Pc) -> &[u8] {
-        &self.rom[start.address..end.address]
+    pub fn offset(&self, start: Pc) -> &[u8] {
+        &self.rom[start.address..]
     }
 }
 

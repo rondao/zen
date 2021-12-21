@@ -1,58 +1,85 @@
-use std::convert::TryInto;
-
-#[derive(Debug, Default, Clone, Copy)]
-pub struct Block {
-    pub block_type: u8,
-    pub y_flip: bool,
-    pub x_flip: bool,
-    pub block_number: u16,
-}
-
-type BtsBlock = u8;
-
+/// Room format reference: https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#room_header
 #[derive(Debug, Default, Clone)]
 pub struct Room {
-    pub layer1: Vec<Block>,
-    pub bts: Vec<BtsBlock>,
-    pub layer2: Option<Vec<Block>>,
+    pub index: u8,
+    pub area: u8,
+    pub map_position: (u8, u8),
+    pub width: u8,
+    pub height: u8,
+    pub up_scroller: u8,
+    pub down_scroller: u8,
+    pub cre_bitset: u8,
+    pub doors: u16,
+    pub state_conditions: Vec<StateCondition>,
 }
 
-/// Room format reference: https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#level_data
-pub fn from_bytes(source: &[u8], has_layer2: bool) -> Room {
-    let layer_size = u16::from_le_bytes([source[0], source[1]]) as usize;
-    let number_of_blocks = layer_size / 2;
-
-    let source = &source[2..];
-    let layer1: Vec<Block> = layer_from_bytes(&source[..number_of_blocks * 2]); // Each block is 2 bytes.
-
-    let source = &source[number_of_blocks * 2..];
-    let bts: Vec<BtsBlock> = source[..number_of_blocks].iter().copied().collect();
-
-    let source = &source[number_of_blocks..];
-    let layer2 = if has_layer2 {
-        Some(layer_from_bytes(&source[..number_of_blocks * 2])) // Each block is 2 bytes.
-    } else {
-        None
+pub fn from_bytes(source: &[u8]) -> Room {
+    #[rustfmt::skip]
+    let room = Room {
+        index:         source[0],
+        area:          source[1],
+        map_position: (source[2],
+                       source[3]),
+        width:         source[4],
+        height:        source[5],
+        up_scroller:   source[6],
+        down_scroller: source[7],
+        cre_bitset:    source[8],
+        doors:       ((source[9] as u16) << 8) + source[10] as u16,
+        state_conditions: state_conditions_from_bytes(&source[11..]),
     };
-
-    Room {
-        layer1,
-        bts,
-        layer2,
-    }
+    room
 }
 
-fn layer_from_bytes(source: &[u8]) -> Vec<Block> {
-    source
-        .chunks(2)
-        .map(|block_data| {
-            let two_bytes = u16::from_le_bytes(block_data.try_into().unwrap());
-            Block {
-                block_type: ((two_bytes & 0b1111_0000_0000_0000) >> 12) as u8,
-                y_flip: (two_bytes & 0b0000_1000_0000_0000) != 0,
-                x_flip: (two_bytes & 0b0000_0100_0000_0000) != 0,
-                block_number: (two_bytes & 0b0000_0011_1111_1111) as u16,
-            }
-        })
-        .collect()
+/// Room format reference: https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#room_header
+#[derive(Debug, Default, Clone)]
+pub struct StateCondition {
+    pub condition: u16,
+    pub parameter: Option<u16>,
+    pub state_header: Option<u16>,
+}
+
+fn state_conditions_from_bytes(source: &[u8]) -> Vec<StateCondition> {
+    let condition = ((source[0] as u16) << 8) + source[1] as u16;
+
+    match condition {
+        // Terminator.
+        0xE5E6 => {
+            return Vec::from([StateCondition {
+                condition,
+                parameter: None,
+                state_header: None,
+            }])
+        }
+        // Two bytes parameter.
+        0xE5EB => {
+            let mut states = Vec::from([StateCondition {
+                condition,
+                parameter: Some(((source[3] as u16) << 8) + source[4] as u16),
+                state_header: Some(((source[5] as u16) << 8) + source[6] as u16),
+            }]);
+            states.append(&mut state_conditions_from_bytes(&source[7..]));
+            return states;
+        }
+        // One byte parameter.
+        0xE612 | 0xE629 => {
+            let mut states = Vec::from([StateCondition {
+                condition,
+                parameter: Some(source[3] as u16),
+                state_header: Some(((source[4] as u16) << 8) + source[5] as u16),
+            }]);
+            states.append(&mut state_conditions_from_bytes(&source[6..]));
+            return states;
+        }
+        // No parameter.
+        _ => {
+            let mut states = Vec::from([StateCondition {
+                condition,
+                parameter: None,
+                state_header: Some(((source[3] as u16) << 8) + source[4] as u16),
+            }]);
+            states.append(&mut state_conditions_from_bytes(&source[5..]));
+            return states;
+        }
+    };
 }
