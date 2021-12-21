@@ -9,7 +9,7 @@ use zen::{
         palette,
     },
     image::tileset_to_image,
-    super_metroid::{level_data, room, state::States, tileset},
+    super_metroid::{level_data::Levels, room, state::States, tileset},
     Rom,
 };
 
@@ -95,8 +95,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
     let state = states.get_state(state_address as usize);
 
+    // Levels
+    let mut levels = Levels::default();
+
     // Load level from State
-    let crateria_level = level_data::from_bytes(
+    levels.load_from_bytes(
+        state.level_data as usize,
         &compress::decompress_lz5(
             rom.offset(
                 LoRom {
@@ -107,6 +111,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         )?,
         true,
     );
+    let crateria_level = levels.get_level(state.level_data as usize);
 
     crateria_level
         .to_image(&cre_crateria_tileset, &palette, &gfx_cre)
