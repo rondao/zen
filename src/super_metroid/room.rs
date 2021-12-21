@@ -13,7 +13,7 @@ pub struct Room {
     pub state_conditions: Vec<StateCondition>,
 }
 
-pub fn from_bytes(source: &[u8]) -> Room {
+pub fn from_bytes(room_address: u16, source: &[u8]) -> Room {
     #[rustfmt::skip]
     let room = Room {
         index:         source[0],
@@ -25,8 +25,8 @@ pub fn from_bytes(source: &[u8]) -> Room {
         up_scroller:   source[6],
         down_scroller: source[7],
         cre_bitset:    source[8],
-        doors:       ((source[9] as u16) << 8) + source[10] as u16,
-        state_conditions: state_conditions_from_bytes(&source[11..]),
+        doors:         u16::from_le_bytes([source[9], source[10]]),
+        state_conditions: state_conditions_from_bytes(room_address + 11, &source[11..]),
     };
     room
 }
@@ -36,11 +36,11 @@ pub fn from_bytes(source: &[u8]) -> Room {
 pub struct StateCondition {
     pub condition: u16,
     pub parameter: Option<u16>,
-    pub state_header: Option<u16>,
+    pub state_address: u16,
 }
 
-fn state_conditions_from_bytes(source: &[u8]) -> Vec<StateCondition> {
-    let condition = ((source[0] as u16) << 8) + source[1] as u16;
+fn state_conditions_from_bytes(default_state_address: u16, source: &[u8]) -> Vec<StateCondition> {
+    let condition = u16::from_le_bytes([source[0], source[1]]);
 
     match condition {
         // Terminator.
@@ -48,27 +48,33 @@ fn state_conditions_from_bytes(source: &[u8]) -> Vec<StateCondition> {
             return Vec::from([StateCondition {
                 condition,
                 parameter: None,
-                state_header: None,
+                state_address: default_state_address + 2,
             }])
         }
         // Two bytes parameter.
         0xE5EB => {
             let mut states = Vec::from([StateCondition {
                 condition,
-                parameter: Some(((source[3] as u16) << 8) + source[4] as u16),
-                state_header: Some(((source[5] as u16) << 8) + source[6] as u16),
+                parameter: Some(u16::from_le_bytes([source[2], source[3]])),
+                state_address: u16::from_le_bytes([source[4], source[5]]),
             }]);
-            states.append(&mut state_conditions_from_bytes(&source[7..]));
+            states.append(&mut state_conditions_from_bytes(
+                default_state_address + 6,
+                &source[6..],
+            ));
             return states;
         }
         // One byte parameter.
         0xE612 | 0xE629 => {
             let mut states = Vec::from([StateCondition {
                 condition,
-                parameter: Some(source[3] as u16),
-                state_header: Some(((source[4] as u16) << 8) + source[5] as u16),
+                parameter: Some(source[2] as u16),
+                state_address: u16::from_le_bytes([source[3], source[4]]),
             }]);
-            states.append(&mut state_conditions_from_bytes(&source[6..]));
+            states.append(&mut state_conditions_from_bytes(
+                default_state_address + 5,
+                &source[5..],
+            ));
             return states;
         }
         // No parameter.
@@ -76,9 +82,12 @@ fn state_conditions_from_bytes(source: &[u8]) -> Vec<StateCondition> {
             let mut states = Vec::from([StateCondition {
                 condition,
                 parameter: None,
-                state_header: Some(((source[3] as u16) << 8) + source[4] as u16),
+                state_address: u16::from_le_bytes([source[2], source[3]]),
             }]);
-            states.append(&mut state_conditions_from_bytes(&source[5..]));
+            states.append(&mut state_conditions_from_bytes(
+                default_state_address + 4,
+                &source[4..],
+            ));
             return states;
         }
     };

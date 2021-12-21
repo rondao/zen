@@ -9,7 +9,7 @@ use zen::{
         palette,
     },
     image::tileset_to_image,
-    super_metroid::{level_data, tileset},
+    super_metroid::{level_data, room, state::States, tileset},
     Rom,
 };
 
@@ -76,17 +76,41 @@ fn main() -> Result<(), Box<dyn Error>> {
         .save("/home/rondao/dev/snes_data/cre_crateria_tileset.png")?;
 
     // Crateria Room
-    let crateria_room_data =
-        compress::decompress_lz5(rom.offset(LoRom { address: 0xC2_C2BB }.into()))?;
-    assert_eq!(
-        crateria_room_data,
-        fs::read("/home/rondao/dev/snes_data/Crateria.room")?
+    let crateria_room_data = rom.offset(LoRom { address: 0x8F_91F8 }.into());
+    let crateria_room = room::from_bytes(0x91F8, &crateria_room_data);
+
+    // States
+    let mut states = States::default();
+
+    // Load states from Room
+    let state_address = crateria_room.state_conditions[0].state_address;
+    states.load_bytes(
+        state_address as usize,
+        rom.offset(
+            LoRom {
+                address: 0x8F_0000 + state_address as usize,
+            }
+            .into(),
+        ),
+    );
+    let state = states.get_state(state_address as usize);
+
+    // Load level from State
+    let crateria_level = level_data::from_bytes(
+        &compress::decompress_lz5(
+            rom.offset(
+                LoRom {
+                    address: state.level_data as usize,
+                }
+                .into(),
+            ),
+        )?,
+        true,
     );
 
-    let crateria_room = level_data::from_bytes(&crateria_room_data, true);
-    crateria_room
+    crateria_level
         .to_image(&cre_crateria_tileset, &palette, &gfx_cre)
-        .save("/home/rondao/dev/snes_data/crateria.room.png")?;
+        .save("/home/rondao/dev/snes_data/crateria.level.png")?;
 
     Ok(())
 }
