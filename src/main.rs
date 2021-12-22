@@ -9,7 +9,7 @@ use zen::{
         palette,
     },
     image::tileset_to_image,
-    super_metroid::{level_data::Levels, room, state::States, tileset},
+    super_metroid::{door_list::Doors, level_data::Levels, room, state::States, tileset},
     Rom,
 };
 
@@ -116,6 +116,21 @@ fn main() -> Result<(), Box<dyn Error>> {
     crateria_level
         .to_image(&cre_crateria_tileset, &palette, &gfx_cre)
         .save("/home/rondao/dev/snes_data/crateria.level.png")?;
+
+    // Doors
+    let mut doors = Doors::default();
+
+    // Load door from room
+    doors.load_bytes(
+        crateria_room.doors,
+        &crateria_level,
+        rom.offset(
+            LoRom {
+                address: 0x8F_0000 + crateria_room.doors as usize,
+            }
+            .into(),
+        ),
+    );
 
     Ok(())
 }
