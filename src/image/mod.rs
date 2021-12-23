@@ -5,7 +5,7 @@ use crate::{
         gfx::{Gfx, Tile8},
         Palette, Rgb888,
     },
-    super_metroid::{level_data::LevelData, tileset::Tileset},
+    super_metroid::{level_data::LevelData, tileset::Tileset, SuperMetroid},
 };
 
 impl From<&Palette> for RgbImage {
@@ -85,8 +85,14 @@ pub fn tileset_to_image(tileset: &Tileset, palette: &Palette, graphics: &Gfx) ->
 }
 
 impl LevelData {
-    pub fn to_image(&self, tileset: &Tileset, palette: &Palette, graphics: &Gfx) -> RgbImage {
-        let mut img: RgbImage = RgbImage::new(3 * 16 * 16, 2 * 16 * 16);
+    pub fn to_image(
+        &self,
+        size: (usize, usize),
+        tileset: &Tileset,
+        palette: &Palette,
+        graphics: &Gfx,
+    ) -> RgbImage {
+        let mut img: RgbImage = RgbImage::new(16 * 16 * size.0 as u32, 16 * 16 * size.1 as u32);
         for (index, block) in self.layer1.iter().enumerate() {
             let tileset_tile = block.block_number as usize * 4;
             let mut tiles: Vec<_> = tileset[tileset_tile..tileset_tile + 4]
@@ -110,8 +116,8 @@ impl LevelData {
                 tile8.draw(
                     &mut img,
                     (
-                        (index % (3 * 16)) * 16 + (t % 2) * 8,
-                        (index / (3 * 16)) * 16 + (t / 2) * 8,
+                        (index % (size.0 * 16)) * 16 + (t % 2) * 8,
+                        (index / (size.0 * 16)) * 16 + (t / 2) * 8,
                     ),
                     (tile.x_flip ^ block.x_flip, tile.y_flip ^ block.y_flip),
                     palette,
@@ -120,5 +126,33 @@ impl LevelData {
             }
         }
         img
+    }
+}
+
+impl SuperMetroid {
+    pub fn room_to_image(
+        &self,
+        room: usize,
+        state: usize,
+        tileset: usize,
+        palette: usize,
+        graphics: usize,
+    ) -> Option<RgbImage> {
+        if let Some(room) = self.rooms.get(&room) {
+            if let Some(state) = self
+                .states
+                .get(room.state_conditions[state].state_address as usize)
+            {
+                if let Some(level_data) = self.levels.get(state.level_address as usize) {
+                    return Some(level_data.to_image(
+                        (room.width.into(), room.height.into()),
+                        &self.tileset_with_cre(tileset),
+                        &self.palettes[palette],
+                        &self.gfx_with_cre(graphics),
+                    ));
+                }
+            }
+        }
+        None
     }
 }

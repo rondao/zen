@@ -3,7 +3,7 @@ use std::collections::HashMap;
 //https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#state_header
 #[derive(Debug, Default, Clone)]
 pub struct State {
-    pub level_data: u32, // Only three bytes are used (u24).
+    pub level_address: u32, // Only three bytes are used (u24).
     pub tileset: u8,
     pub music_data_index: u8,
     pub music_track: u8,
@@ -30,7 +30,7 @@ impl States {
         if let None = self.states.get(&state_address) {
             #[rustfmt::skip]
             let state = State {
-                level_data:           u32::from_le_bytes([source[0], source[1], source[2], 0]),
+                level_address:           u32::from_le_bytes([source[0], source[1], source[2], 0]),
                 tileset:              source[3],
                 music_data_index:     source[4],
                 music_track:          source[5],
@@ -50,7 +50,7 @@ impl States {
         }
     }
 
-    pub fn get_state(&self, state_address: usize) -> &State {
-        self.states.get(&state_address).unwrap()
+    pub fn get(&self, state_address: usize) -> Option<&State> {
+        self.states.get(&state_address)
     }
 }

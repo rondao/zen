@@ -23,8 +23,8 @@ pub struct Levels {
 }
 
 impl Levels {
-    pub fn get_level(&self, level_address: usize) -> &LevelData {
-        self.levels.get(&level_address).unwrap()
+    pub fn get(&self, level_address: usize) -> Option<&LevelData> {
+        self.levels.get(&level_address)
     }
 
     /// Level Data format reference: https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#level_data

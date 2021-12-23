@@ -7,14 +7,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         "/home/rondao/dev/snes_data/Super Metroid (JU) [!].smc",
     )?;
 
-    sm.levels
-        .get_level(0xC6DEE0)
-        .to_image(
-            &sm.tileset_with_cre(4),
-            &sm.palettes[7],
-            &sm.gfx_with_cre(4),
-        )
-        .save("/home/rondao/dev/snes_data/Kraid_Lair_level.png")?;
+    if let Some(image) = sm.room_to_image(0x8F96BA, 2, 1, 3, 1) {
+        image.save("/home/rondao/dev/snes_data/0x8F96BA.png")?;
+    }
 
     Ok(())
 }

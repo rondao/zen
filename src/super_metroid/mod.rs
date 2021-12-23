@@ -5,7 +5,7 @@ pub mod room;
 pub mod state;
 pub mod tileset;
 
-use std::{error::Error, fs};
+use std::{collections::HashMap, error::Error, fs};
 
 use crate::{
     address::{LoRom, Pc},
@@ -38,7 +38,7 @@ pub struct SuperMetroid {
     pub cre_gfx: Gfx,
     pub cre_tileset: Tileset,
     pub levels: Levels,
-    pub rooms: Vec<Room>,
+    pub rooms: HashMap<usize, Room>,
     pub states: States,
     pub doors: Doors,
 }
@@ -124,10 +124,13 @@ pub fn load_unheadered_rom(filename: &str) -> Result<SuperMetroid, Box<dyn Error
 
     // Load all Rooms.
     for address in ROOMS {
-        sm.rooms.push(room::from_bytes(
-            *address as u16,
-            sm.rom.offset(LoRom { address: *address }.into()),
-        ));
+        sm.rooms.insert(
+            *address,
+            room::from_bytes(
+                *address as u16,
+                sm.rom.offset(LoRom { address: *address }.into()),
+            ),
+        );
     }
 
     // Load all Doors.
@@ -145,7 +148,7 @@ pub fn load_unheadered_rom(filename: &str) -> Result<SuperMetroid, Box<dyn Error
     }
 
     // Load all StateConditions, States and LevelData.
-    for room in sm.rooms.iter() {
+    for room in sm.rooms.values() {
         for state_condition in room.state_conditions.iter() {
             sm.states.load_bytes(
                 state_condition.state_address as usize,
@@ -157,19 +160,20 @@ pub fn load_unheadered_rom(filename: &str) -> Result<SuperMetroid, Box<dyn Error
                 ),
             );
 
-            let state = sm.states.get_state(state_condition.state_address as usize);
-            sm.levels.load_from_bytes(
-                state.level_data as usize,
-                &compress::decompress_lz5(
-                    &sm.rom.offset(
-                        LoRom {
-                            address: state.level_data as usize,
-                        }
-                        .into(),
-                    ),
-                )?,
-                state.layer_2_x_scroll & state.layer_2_y_scroll & 1 == 0,
-            );
+            if let Some(state) = sm.states.get(state_condition.state_address as usize) {
+                sm.levels.load_from_bytes(
+                    state.level_address as usize,
+                    &compress::decompress_lz5(
+                        &sm.rom.offset(
+                            LoRom {
+                                address: state.level_address as usize,
+                            }
+                            .into(),
+                        ),
+                    )?,
+                    state.layer_2_x_scroll & state.layer_2_y_scroll & 1 == 0,
+                );
+            }
         }
     }
 
