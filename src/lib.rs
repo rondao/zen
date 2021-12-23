@@ -1,20 +1,8 @@
-use address::Pc;
-
 pub mod address;
 pub mod compress;
 pub mod graphics;
 pub mod image;
 pub mod super_metroid;
-
-pub struct Rom {
-    pub rom: Vec<u8>,
-}
-
-impl Rom {
-    pub fn offset(&self, start: Pc) -> &[u8] {
-        &self.rom[start.address..]
-    }
-}
 
 pub struct ParseError;
 

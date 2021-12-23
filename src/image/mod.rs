@@ -86,7 +86,7 @@ pub fn tileset_to_image(tileset: &Tileset, palette: &Palette, graphics: &Gfx) ->
 
 impl LevelData {
     pub fn to_image(&self, tileset: &Tileset, palette: &Palette, graphics: &Gfx) -> RgbImage {
-        let mut img: RgbImage = RgbImage::new(9 * 16 * 16, 5 * 16 * 16);
+        let mut img: RgbImage = RgbImage::new(3 * 16 * 16, 2 * 16 * 16);
         for (index, block) in self.layer1.iter().enumerate() {
             let tileset_tile = block.block_number as usize * 4;
             let mut tiles: Vec<_> = tileset[tileset_tile..tileset_tile + 4]
@@ -110,8 +110,8 @@ impl LevelData {
                 tile8.draw(
                     &mut img,
                     (
-                        (index % (9 * 16)) * 16 + (t % 2) * 8,
-                        (index / (9 * 16)) * 16 + (t / 2) * 8,
+                        (index % (3 * 16)) * 16 + (t % 2) * 8,
+                        (index / (3 * 16)) * 16 + (t / 2) * 8,
                     ),
                     (tile.x_flip ^ block.x_flip, tile.y_flip ^ block.y_flip),
                     palette,

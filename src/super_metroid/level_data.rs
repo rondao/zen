@@ -27,7 +27,7 @@ impl Levels {
         self.levels.get(&level_address).unwrap()
     }
 
-    /// Room format reference: https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#level_data
+    /// Level Data format reference: https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#level_data
     pub fn load_from_bytes(&mut self, level_address: usize, source: &[u8], has_layer2: bool) {
         if let None = self.levels.get(&level_address) {
             let layer_size = u16::from_le_bytes([source[0], source[1]]) as usize;
