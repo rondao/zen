@@ -4,7 +4,7 @@ use crate::{
     address::{LoRom, Pc},
     compress,
     graphics::{
-        gfx::{self, Gfx},
+        gfx::{self, Gfx, Tile8},
         palette, Palette,
     },
     ParseError,
@@ -41,6 +41,21 @@ pub struct Rom {
 impl Rom {
     pub fn offset(&self, start: Pc) -> &[u8] {
         &self.rom[start.address..]
+    }
+
+    pub fn gfx_with_cre(&self, gfx: usize) -> Gfx {
+        Gfx {
+            tiles: [
+                &self.graphics[gfx].tiles[..],
+                &[Tile8 { colors: [0; 64] }; 64],
+                &self.cre_gfx.tiles[..],
+            ]
+            .concat(),
+        }
+    }
+
+    pub fn tileset_with_cre(&self, tileset: usize) -> Tileset {
+        [&self.cre_tileset[..], &self.tilesets[tileset]].concat()
     }
 
     fn check_md5(&self) -> bool {
