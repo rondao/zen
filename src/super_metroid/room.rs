@@ -53,15 +53,12 @@ fn state_conditions_from_bytes(default_state_address: u16, source: &[u8]) -> Vec
         }
         // Two bytes parameter.
         0xE5EB => {
-            let mut states = Vec::from([StateCondition {
+            let mut states = state_conditions_from_bytes(default_state_address + 6, &source[6..]);
+            states.push(StateCondition {
                 condition,
                 parameter: Some(u16::from_le_bytes([source[2], source[3]])),
                 state_address: u16::from_le_bytes([source[4], source[5]]),
-            }]);
-            states.append(&mut state_conditions_from_bytes(
-                default_state_address + 6,
-                &source[6..],
-            ));
+            });
             return states;
         }
         // One byte parameter.

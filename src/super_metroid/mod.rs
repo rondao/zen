@@ -17,12 +17,14 @@ use crate::{
     ParseError,
 };
 
-use address::{CRE_GFX, CRE_TILESET, DOORS, GRAPHICS, PALETTES, ROOMS, TILESETS};
+use address::{CRE_GFX, CRE_TILESET, DOORS, GRAPHICS, PALETTES, ROOMS, TILETABLES};
 use door_list::Doors;
 use level_data::Levels;
 use room::Room;
 use state::States;
-use tileset::Tileset;
+use tileset::TileTable;
+
+use self::tileset::{Tileset, TILESETS};
 
 // "21f3e98df4780ee1c667b84e57d88675"
 pub const UNHEADERED_MD5: [u8; 16] = [
@@ -34,23 +36,14 @@ pub struct SuperMetroid {
     pub rom: Vec<u8>,
     pub palettes: Vec<Palette>,
     pub graphics: Vec<Gfx>,
+    pub tile_tables: Vec<TileTable>,
     pub tilesets: Vec<Tileset>,
     pub cre_gfx: Gfx,
-    pub cre_tileset: Tileset,
+    pub cre_tileset: TileTable,
     pub levels: Levels,
     pub rooms: HashMap<usize, Room>,
     pub states: States,
     pub doors: Doors,
-}
-
-pub trait Offset {
-    fn offset(&self, start: Pc) -> &[u8];
-}
-
-impl Offset for Vec<u8> {
-    fn offset(&self, start: Pc) -> &[u8] {
-        &self[start.address..]
-    }
 }
 
 impl SuperMetroid {
@@ -65,8 +58,8 @@ impl SuperMetroid {
         }
     }
 
-    pub fn tileset_with_cre(&self, tileset: usize) -> Tileset {
-        [&self.cre_tileset[..], &self.tilesets[tileset]].concat()
+    pub fn tile_table_with_cre(&self, tileset: usize) -> TileTable {
+        [&self.cre_tileset[..], &self.tile_tables[tileset]].concat()
     }
 
     fn check_md5(&self) -> bool {
@@ -99,13 +92,16 @@ pub fn load_unheadered_rom(filename: &str) -> Result<SuperMetroid, Box<dyn Error
         )?));
     }
 
-    // Load all Tilesets.
-    for address in TILESETS {
-        sm.tilesets
+    // Load all Tile Tables.
+    for address in TILETABLES {
+        sm.tile_tables
             .push(tileset::from_bytes(&compress::decompress_lz5(
                 sm.rom.offset(LoRom { address: *address }.into()),
             )?));
     }
+
+    // Load all Tile Tables.
+    sm.tilesets = TILESETS.clone().into();
 
     // Load CRE graphic.
     sm.cre_gfx = gfx::from_4bpp(&compress::decompress_lz5(
@@ -178,4 +174,14 @@ pub fn load_unheadered_rom(filename: &str) -> Result<SuperMetroid, Box<dyn Error
     }
 
     Ok(sm)
+}
+
+pub trait Offset {
+    fn offset(&self, start: Pc) -> &[u8];
+}
+
+impl Offset for Vec<u8> {
+    fn offset(&self, start: Pc) -> &[u8] {
+        &self[start.address..]
+    }
 }
