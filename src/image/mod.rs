@@ -7,7 +7,7 @@ use crate::{
     },
     super_metroid::{
         level_data::{Block, LevelData},
-        tileset::TileTable,
+        tile_table::TileTable,
         SuperMetroid,
     },
 };
@@ -173,26 +173,26 @@ impl SuperMetroid {
         if let Some(room) = self.rooms.get(&room_address) {
             if let Some(state) = self
                 .states
-                .get(room.state_conditions[state].state_address as usize)
+                .get(&(room.state_conditions[state].state_address as usize))
             {
-                if let Some(level_data) = self.levels.get(state.level_address as usize) {
+                if let Some(level_data) = self.levels.get(&(state.level_address as usize)) {
                     let tileset = self.tilesets[state.tileset as usize];
 
                     let tile_table = if tileset.use_cre {
-                        self.tile_table_with_cre(tileset.tile_table)
+                        self.tile_table_with_cre(tileset.tile_table as usize)
                     } else {
-                        self.tile_tables[tileset.tile_table].clone()
+                        self.tile_tables[&(tileset.tile_table as usize)].clone()
                     };
                     let graphics = if tileset.use_cre {
-                        self.gfx_with_cre(tileset.graphic)
+                        self.gfx_with_cre(tileset.graphic as usize)
                     } else {
-                        self.graphics[tileset.graphic].clone()
+                        self.graphics[&(tileset.graphic as usize)].clone()
                     };
 
                     return Some(level_data.to_image(
                         (room.width as usize, room.height as usize),
                         &tile_table,
-                        &self.palettes[tileset.palette],
+                        &self.palettes[&(tileset.palette as usize)],
                         &graphics,
                     ));
                 }

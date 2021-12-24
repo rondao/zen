@@ -1,4 +1,4 @@
-use std::{collections::HashMap, convert::TryInto};
+use std::convert::TryInto;
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Block {
@@ -17,48 +17,33 @@ pub struct LevelData {
     pub layer2: Option<Vec<Block>>,
 }
 
-#[derive(Debug, Default, Clone)]
-pub struct Levels {
-    levels: HashMap<usize, LevelData>,
+/// Level Data format reference: https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#level_data
+pub fn load_from_bytes(source: &[u8], has_layer2: bool) -> LevelData {
+    let layer_size = u16::from_le_bytes([source[0], source[1]]) as usize;
+    let number_of_blocks = layer_size / 2;
+
+    let source = &source[2..];
+    let layer1: Vec<Block> = layer_from_bytes(&source[..number_of_blocks * 2]); // Each block is 2 bytes.
+
+    let source = &source[number_of_blocks * 2..];
+    let bts: Vec<BtsBlock> = source[..number_of_blocks].iter().copied().collect();
+
+    let source = &source[number_of_blocks..];
+    let layer2 = if has_layer2 {
+        Some(layer_from_bytes(&source[..number_of_blocks * 2])) // Each block is 2 bytes.
+    } else {
+        None
+    };
+
+    LevelData {
+        layer1,
+        bts,
+        layer2,
+    }
 }
 
-impl Levels {
-    pub fn get(&self, level_address: usize) -> Option<&LevelData> {
-        self.levels.get(&level_address)
-    }
-
-    /// Level Data format reference: https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#level_data
-    pub fn load_from_bytes(&mut self, level_address: usize, source: &[u8], has_layer2: bool) {
-        if let None = self.levels.get(&level_address) {
-            let layer_size = u16::from_le_bytes([source[0], source[1]]) as usize;
-            let number_of_blocks = layer_size / 2;
-
-            let source = &source[2..];
-            let layer1: Vec<Block> = self.layer_from_bytes(&source[..number_of_blocks * 2]); // Each block is 2 bytes.
-
-            let source = &source[number_of_blocks * 2..];
-            let bts: Vec<BtsBlock> = source[..number_of_blocks].iter().copied().collect();
-
-            let source = &source[number_of_blocks..];
-            let layer2 = if has_layer2 {
-                Some(self.layer_from_bytes(&source[..number_of_blocks * 2])) // Each block is 2 bytes.
-            } else {
-                None
-            };
-
-            self.levels.insert(
-                level_address,
-                LevelData {
-                    layer1,
-                    bts,
-                    layer2,
-                },
-            );
-        }
-    }
-
-    #[rustfmt::skip]
-    fn layer_from_bytes(&self, source: &[u8]) -> Vec<Block> {
+#[rustfmt::skip]
+fn layer_from_bytes(source: &[u8]) -> Vec<Block> {
     source
         .chunks(2)
         .map(|block_data| {
@@ -71,5 +56,4 @@ impl Levels {
             }
         })
         .collect()
-    }
 }

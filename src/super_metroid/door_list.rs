@@ -1,27 +1,11 @@
-use std::collections::HashMap;
-
 pub type DoorList = Vec<u16>;
 
 //https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#door_list
-#[derive(Debug, Default, Clone)]
-pub struct Doors {
-    doors: HashMap<u16, DoorList>,
-}
-
-impl Doors {
-    pub fn load_bytes(&mut self, doorlist_address: u16, number_of_doors: usize, source: &[u8]) {
-        if let None = self.doors.get(&doorlist_address) {
-            let door_list = source[..number_of_doors * 2]
-                .chunks(2)
-                .map(|bytes| u16::from_le_bytes([bytes[0], bytes[1]]))
-                .collect();
-            self.doors.insert(doorlist_address, door_list);
-        }
-    }
-
-    pub fn get_doors(&self, doorlist_address: u16) -> &DoorList {
-        self.doors.get(&doorlist_address).unwrap()
-    }
+pub fn load_bytes(number_of_doors: usize, source: &[u8]) -> DoorList {
+    source[..number_of_doors * 2]
+        .chunks(2)
+        .map(|bytes| u16::from_le_bytes([bytes[0], bytes[1]]))
+        .collect()
 }
 
 // Workaround for finding how many doors a Room have.

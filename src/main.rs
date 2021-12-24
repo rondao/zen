@@ -3,9 +3,8 @@ use std::error::Error;
 use zen::super_metroid::{self, address::ROOMS};
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let sm = super_metroid::load_unheadered_rom(
-        "/home/rondao/dev/snes_data/Super Metroid (JU) [!].smc",
-    )?;
+    let sm =
+        super_metroid::load_unheadered_rom("/home/rondao/dev/snes_data/Project_Base_0.8.1.smc")?;
 
     for address in ROOMS {
         println!("Room: {:x}", *address);

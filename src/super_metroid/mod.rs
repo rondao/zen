@@ -3,6 +3,7 @@ pub mod door_list;
 pub mod level_data;
 pub mod room;
 pub mod state;
+pub mod tile_table;
 pub mod tileset;
 
 use std::{collections::HashMap, error::Error, fs};
@@ -17,14 +18,14 @@ use crate::{
     ParseError,
 };
 
-use address::{CRE_GFX, CRE_TILESET, DOORS, GRAPHICS, PALETTES, ROOMS, TILETABLES};
-use door_list::Doors;
-use level_data::Levels;
+use address::{CRE_GFX, CRE_TILESET, DOORS, ROOMS, TILESETS};
+use door_list::DoorList;
+use level_data::LevelData;
 use room::Room;
-use state::States;
-use tileset::TileTable;
+use state::State;
+use tile_table::TileTable;
 
-use self::tileset::{Tileset, TILESETS};
+use self::tileset::Tileset;
 
 // "21f3e98df4780ee1c667b84e57d88675"
 pub const UNHEADERED_MD5: [u8; 16] = [
@@ -34,23 +35,23 @@ pub const UNHEADERED_MD5: [u8; 16] = [
 #[derive(Debug, Default, Clone)]
 pub struct SuperMetroid {
     pub rom: Vec<u8>,
-    pub palettes: Vec<Palette>,
-    pub graphics: Vec<Gfx>,
-    pub tile_tables: Vec<TileTable>,
-    pub tilesets: Vec<Tileset>,
     pub cre_gfx: Gfx,
     pub cre_tileset: TileTable,
-    pub levels: Levels,
+    pub tilesets: Vec<Tileset>,
+    pub palettes: HashMap<usize, Palette>,
+    pub graphics: HashMap<usize, Gfx>,
+    pub tile_tables: HashMap<usize, TileTable>,
+    pub levels: HashMap<usize, LevelData>,
     pub rooms: HashMap<usize, Room>,
-    pub states: States,
-    pub doors: Doors,
+    pub states: HashMap<usize, State>,
+    pub doors: HashMap<usize, DoorList>,
 }
 
 impl SuperMetroid {
     pub fn gfx_with_cre(&self, gfx: usize) -> Gfx {
         Gfx {
             tiles: [
-                &self.graphics[gfx].tiles[..],
+                &self.graphics[&gfx].tiles[..],
                 &[Tile8 { colors: [0; 64] }; 64],
                 &self.cre_gfx.tiles[..],
             ]
@@ -59,7 +60,7 @@ impl SuperMetroid {
     }
 
     pub fn tile_table_with_cre(&self, tileset: usize) -> TileTable {
-        [&self.cre_tileset[..], &self.tile_tables[tileset]].concat()
+        [&self.cre_tileset[..], &self.tile_tables[&tileset]].concat()
     }
 
     fn check_md5(&self) -> bool {
@@ -77,31 +78,49 @@ pub fn load_unheadered_rom(filename: &str) -> Result<SuperMetroid, Box<dyn Error
         return Err(Box::new(ParseError));
     }
 
-    // Load all Palettes.
-    for address in PALETTES {
+    // Load all Tilesets.
+    sm.tilesets = tileset::from_bytes(
+        &sm.rom.offset(LoRom { address: TILESETS }.into())
+            [..tileset::TILESET_SIZE * tileset::NUMBER_OF_TILESETS],
+    );
+
+    for tileset in sm.tilesets.iter() {
+        // Load all Palettes.
         sm.palettes
-            .push(palette::from_bytes(&compress::decompress_lz5(
-                sm.rom.offset(LoRom { address: *address }.into()),
+            .entry(tileset.palette as usize)
+            .or_insert(palette::from_bytes(&compress::decompress_lz5(
+                sm.rom.offset(
+                    LoRom {
+                        address: tileset.palette as usize,
+                    }
+                    .into(),
+                ),
             )?)?);
-    }
 
-    // Load all Graphics.
-    for address in GRAPHICS {
-        sm.graphics.push(gfx::from_4bpp(&compress::decompress_lz5(
-            sm.rom.offset(LoRom { address: *address }.into()),
-        )?));
-    }
+        // Load all Graphics.
+        sm.graphics
+            .entry(tileset.graphic as usize)
+            .or_insert(gfx::from_4bpp(&compress::decompress_lz5(
+                sm.rom.offset(
+                    LoRom {
+                        address: tileset.graphic as usize,
+                    }
+                    .into(),
+                ),
+            )?));
 
-    // Load all Tile Tables.
-    for address in TILETABLES {
+        // Load all Tile Tables.
         sm.tile_tables
-            .push(tileset::from_bytes(&compress::decompress_lz5(
-                sm.rom.offset(LoRom { address: *address }.into()),
+            .entry(tileset.tile_table as usize)
+            .or_insert(tile_table::from_bytes(&compress::decompress_lz5(
+                sm.rom.offset(
+                    LoRom {
+                        address: tileset.tile_table as usize,
+                    }
+                    .into(),
+                ),
             )?));
     }
-
-    // Load all Tile Tables.
-    sm.tilesets = TILESETS.clone().into();
 
     // Load CRE graphic.
     sm.cre_gfx = gfx::from_4bpp(&compress::decompress_lz5(
@@ -109,7 +128,7 @@ pub fn load_unheadered_rom(filename: &str) -> Result<SuperMetroid, Box<dyn Error
     )?);
 
     // Load CRE tileset.
-    sm.cre_tileset = tileset::from_bytes(&compress::decompress_lz5(
+    sm.cre_tileset = tile_table::from_bytes(&compress::decompress_lz5(
         sm.rom.offset(
             LoRom {
                 address: CRE_TILESET,
@@ -120,19 +139,15 @@ pub fn load_unheadered_rom(filename: &str) -> Result<SuperMetroid, Box<dyn Error
 
     // Load all Rooms.
     for address in ROOMS {
-        sm.rooms.insert(
-            *address,
-            room::from_bytes(
-                *address as u16,
-                sm.rom.offset(LoRom { address: *address }.into()),
-            ),
-        );
+        sm.rooms.entry(*address).or_insert(room::from_bytes(
+            *address as u16,
+            sm.rom.offset(LoRom { address: *address }.into()),
+        ));
     }
 
     // Load all Doors.
     for door in DOORS {
-        sm.doors.load_bytes(
-            door.1 as u16,
+        sm.doors.entry(door.1).or_insert(door_list::load_bytes(
             door.0,
             sm.rom.offset(
                 LoRom {
@@ -140,34 +155,36 @@ pub fn load_unheadered_rom(filename: &str) -> Result<SuperMetroid, Box<dyn Error
                 }
                 .into(),
             ),
-        );
+        ));
     }
 
     // Load all StateConditions, States and LevelData.
     for room in sm.rooms.values() {
         for state_condition in room.state_conditions.iter() {
-            sm.states.load_bytes(
-                state_condition.state_address as usize,
-                &sm.rom.offset(
-                    LoRom {
-                        address: 0x8F_0000 + state_condition.state_address as usize,
-                    }
-                    .into(),
-                ),
-            );
+            sm.states
+                .entry(state_condition.state_address as usize)
+                .or_insert(state::load_bytes(
+                    &sm.rom.offset(
+                        LoRom {
+                            address: 0x8F_0000 + state_condition.state_address as usize,
+                        }
+                        .into(),
+                    ),
+                ));
 
-            if let Some(state) = sm.states.get(state_condition.state_address as usize) {
-                sm.levels.load_from_bytes(
-                    state.level_address as usize,
-                    &compress::decompress_lz5(
-                        &sm.rom.offset(
-                            LoRom {
-                                address: state.level_address as usize,
-                            }
-                            .into(),
-                        ),
-                    )?,
-                    state.layer_2_x_scroll & state.layer_2_y_scroll & 1 == 0,
+            if let Some(state) = sm.states.get(&(state_condition.state_address as usize)) {
+                sm.levels.entry(state.level_address as usize).or_insert(
+                    level_data::load_from_bytes(
+                        &compress::decompress_lz5(
+                            &sm.rom.offset(
+                                LoRom {
+                                    address: state.level_address as usize,
+                                }
+                                .into(),
+                            ),
+                        )?,
+                        state.layer_2_x_scroll & state.layer_2_y_scroll & 1 == 0,
+                    ),
                 );
             }
         }
