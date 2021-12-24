@@ -8,6 +8,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     )?;
 
     for address in ROOMS {
+        println!("Room: {:x}", *address);
         if let Some(image) = sm.room_to_image(*address, 0) {
             image.save(format!("/home/rondao/dev/snes_data/{:x}.png", *address))?;
         }

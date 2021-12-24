@@ -5,7 +5,11 @@ use crate::{
         gfx::{Gfx, Tile8},
         Palette, Rgb888,
     },
-    super_metroid::{level_data::LevelData, tileset::TileTable, SuperMetroid},
+    super_metroid::{
+        level_data::{Block, LevelData},
+        tileset::TileTable,
+        SuperMetroid,
+    },
 };
 
 impl From<&Palette> for RgbImage {
@@ -37,11 +41,14 @@ impl Tile8 {
                 let idx_color = self.colors[tpx + tpy * 8] as usize;
                 let color: Rgb888 = palette.sub_palettes[sub_palette].colors[idx_color].into();
 
-                image.put_pixel(
-                    (origin.0 + if flip.0 { 7 - tpx } else { tpx }) as u32,
-                    (origin.1 + if flip.1 { 7 - tpy } else { tpy }) as u32,
-                    Rgb([color.r, color.g, color.b]),
-                );
+                // Index 0 is used for transparency.
+                if idx_color != 0 {
+                    image.put_pixel(
+                        (origin.0 + if flip.0 { 7 - tpx } else { tpx }) as u32,
+                        (origin.1 + if flip.1 { 7 - tpy } else { tpy }) as u32,
+                        Rgb([color.r, color.g, color.b]),
+                    );
+                }
             }
         }
     }
@@ -92,10 +99,39 @@ impl LevelData {
         palette: &Palette,
         graphics: &Gfx,
     ) -> RgbImage {
-        let mut img: RgbImage = RgbImage::new(16 * 16 * size.0 as u32, 16 * 16 * size.1 as u32);
-        let mut blocks = self.layer1.iter();
+        let mut image: RgbImage = RgbImage::new(16 * 16 * size.0 as u32, 16 * 16 * size.1 as u32);
+        if let Some(layer2) = &self.layer2 {
+            self.layer_to_image(
+                &mut image,
+                size,
+                &mut layer2.iter(),
+                tile_table,
+                palette,
+                graphics,
+            );
+        }
+        self.layer_to_image(
+            &mut image,
+            size,
+            &mut self.layer1.iter(),
+            tile_table,
+            palette,
+            graphics,
+        );
 
-        for index in 0..(16 * size.0 * 16 * size.1) {
+        image
+    }
+
+    fn layer_to_image<'a>(
+        &self,
+        image: &mut RgbImage,
+        size: (usize, usize),
+        blocks: &mut impl Iterator<Item = &'a Block>,
+        tile_table: &TileTable,
+        palette: &Palette,
+        graphics: &Gfx,
+    ) {
+        for index in 0..(16 * size.0 as usize * 16 * size.1 as usize) {
             if let Some(block) = blocks.next() {
                 let tileset_tile = block.block_number as usize * 4;
                 let mut tiles: Vec<_> = tile_table[tileset_tile..tileset_tile + 4]
@@ -117,7 +153,7 @@ impl LevelData {
                     let tile = tiles[t];
                     let tile8 = &graphics.tiles[tile.gfx_index as usize];
                     tile8.draw(
-                        &mut img,
+                        image,
                         (
                             (index % (size.0 * 16)) * 16 + (t % 2) * 8,
                             (index / (size.0 * 16)) * 16 + (t / 2) * 8,
@@ -129,8 +165,6 @@ impl LevelData {
                 }
             }
         }
-        // for (index, block) in self.layer1.iter().enumerate() {}
-        img
     }
 }
 
