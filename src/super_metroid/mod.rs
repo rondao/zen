@@ -19,6 +19,7 @@ use crate::{
         gfx::{self, Gfx, Tile8},
         palette, Palette,
     },
+    ParseError,
 };
 
 use address::{CRE_GFX, CRE_TILESET, DOORS, ROOMS, TILESETS};
