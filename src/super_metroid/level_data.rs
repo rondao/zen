@@ -1,5 +1,7 @@
 use std::convert::TryInto;
 
+use crate::ParseError;
+
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Block {
     pub block_type: u8,
@@ -18,11 +20,21 @@ pub struct LevelData {
 }
 
 /// Level Data format reference: https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#level_data
-pub fn load_from_bytes(source: &[u8], has_layer2: bool) -> LevelData {
+pub fn load_from_bytes(source: &[u8], has_layer2: bool) -> Result<LevelData, ParseError> {
+    if source.len() < 2 {
+        return Err(ParseError);
+    };
+
     let layer_size = u16::from_le_bytes([source[0], source[1]]) as usize;
     let number_of_blocks = layer_size / 2;
 
     let source = &source[2..];
+    if source.len()
+        < number_of_blocks * 2 + number_of_blocks + number_of_blocks * 2 * (has_layer2 as usize)
+    {
+        return Err(ParseError);
+    };
+
     let layer1: Vec<Block> = layer_from_bytes(&source[..number_of_blocks * 2]); // Each block is 2 bytes.
 
     let source = &source[number_of_blocks * 2..];
@@ -35,11 +47,11 @@ pub fn load_from_bytes(source: &[u8], has_layer2: bool) -> LevelData {
         None
     };
 
-    LevelData {
+    Ok(LevelData {
         layer1,
         bts,
         layer2,
-    }
+    })
 }
 
 #[rustfmt::skip]
