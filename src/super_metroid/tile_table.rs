@@ -16,7 +16,7 @@ pub fn from_bytes(source: &[u8]) -> TileTable {
     source
         .chunks(2)
         .map(|tile_data| {
-            let two_bytes = u16::from_le_bytes(tile_data.try_into().unwrap());
+            let two_bytes =  u16::from_le_bytes(tile_data.try_into().unwrap_or( [tile_data[0], 0]));
             Tile {
                 y_flip:       (two_bytes & 0b1000_0000_0000_0000) != 0,
                 x_flip:       (two_bytes & 0b0100_0000_0000_0000) != 0,
