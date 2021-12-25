@@ -108,7 +108,12 @@ fn offset_dictionary<'s>(
         *source.next().ok_or(Lz5Error)?,
         *source.next().ok_or(Lz5Error)?,
     ]) as usize;
-    Ok(copy_dictionary(&output[offset..], number_of_bytes, invert))
+
+    if offset <= output.len() {
+        Ok(copy_dictionary(&output[offset..], number_of_bytes, invert))
+    } else {
+        Err(Lz5Error)
+    }
 }
 
 /// Copy a 'number_of_bytes' from 'output' starting at 'output.len()' minus the next byte.
@@ -118,7 +123,10 @@ fn sliding_dictionary<'s>(
     number_of_bytes: usize,
     invert: bool,
 ) -> Result<Vec<u8>, Lz5Error> {
-    let offset = output.len() - *source.next().ok_or(Lz5Error)? as usize;
+    let offset = output
+        .len()
+        .checked_sub(*source.next().ok_or(Lz5Error)? as usize)
+        .ok_or(Lz5Error)?;
     Ok(copy_dictionary(&output[offset..], number_of_bytes, invert))
 }
 
