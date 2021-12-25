@@ -92,7 +92,9 @@ fn incrementing_fill<'s>(
     number_of_bytes: usize,
 ) -> Result<Vec<u8>, Lz5Error> {
     let data = *source.next().ok_or(Lz5Error)?;
-    Ok((data..=data + (number_of_bytes - 1) as u8).collect())
+    Ok((0..=number_of_bytes - 1)
+        .map(|value| value.wrapping_add(data as usize) as u8)
+        .collect())
 }
 
 /// Copy a 'number_of_bytes' from 'output' starting at a two bytes 'offset'.
