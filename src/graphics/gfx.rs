@@ -39,6 +39,18 @@ impl Tile8 {
             colors: colors.try_into().unwrap(),
         }
     }
+
+    pub fn flip(&self, flip: (bool, bool)) -> [u8; 64] {
+        let mut colors = [0; 64];
+        for x in 0..8 {
+            for y in 0..8 {
+                let xt = if flip.0 { 7 - x } else { x };
+                let yt = if flip.1 { 7 - y } else { y };
+                colors[x + y * 8] = self.colors[xt + yt * 8]
+            }
+        }
+        colors
+    }
 }
 
 /// Palette format reference: https://georgjz.github.io/snesaa03/

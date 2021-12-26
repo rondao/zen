@@ -28,7 +28,7 @@ impl From<&Palette> for RgbImage {
 }
 
 impl Tile8 {
-    pub fn draw(
+    pub fn to_image(
         &self,
         image: &mut RgbImage,
         origin: (usize, usize),
@@ -36,19 +36,16 @@ impl Tile8 {
         palette: &Palette,
         sub_palette: usize,
     ) {
-        for tpx in 0..8 {
-            for tpy in 0..8 {
-                let idx_color = self.colors[tpx + tpy * 8] as usize;
-                let color: Rgb888 = palette.sub_palettes[sub_palette].colors[idx_color].into();
-
-                // Index 0 is used for transparency.
-                if idx_color != 0 {
-                    image.put_pixel(
-                        (origin.0 + if flip.0 { 7 - tpx } else { tpx }) as u32,
-                        (origin.1 + if flip.1 { 7 - tpy } else { tpy }) as u32,
-                        Rgb([color.r, color.g, color.b]),
-                    );
-                }
+        for (pixel, idx_color) in self.flip(flip).iter().enumerate() {
+            // Index 0 is used for transparency.
+            if *idx_color != 0 {
+                let color: Rgb888 =
+                    palette.sub_palettes[sub_palette].colors[*idx_color as usize].into();
+                image.put_pixel(
+                    (origin.0 + pixel % 8) as u32,
+                    (origin.1 + pixel / 8) as u32,
+                    Rgb([color.r, color.g, color.b]),
+                );
             }
         }
     }
@@ -62,7 +59,7 @@ impl Gfx {
             let tx = (tile_num % 16) * 8;
             let ty = (tile_num / 16) * 8;
 
-            tile.draw(&mut img, (tx, ty), (false, false), palette, sub_palette);
+            tile.to_image(&mut img, (tx, ty), (false, false), palette, sub_palette);
         }
         img
     }
@@ -78,7 +75,7 @@ pub fn tileset_to_image(tileset: &TileTable, palette: &Palette, graphics: &Gfx) 
             for t in 0..4 {
                 let tile = tiles.next().unwrap();
                 let tile8 = &graphics.tiles[tile.gfx_index as usize];
-                tile8.draw(
+                tile8.to_image(
                     &mut img,
                     (tx * 16 + (t % 2) * 8, ty * 16 + (t / 2) * 8),
                     (tile.x_flip, tile.y_flip),
@@ -152,7 +149,7 @@ impl LevelData {
                 for t in 0..4 {
                     let tile = tiles[t];
                     let tile8 = &graphics.tiles[tile.gfx_index as usize];
-                    tile8.draw(
+                    tile8.to_image(
                         image,
                         (
                             (index % (size.0 * 16)) * 16 + (t % 2) * 8,
