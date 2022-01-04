@@ -1,5 +1,6 @@
 use std::convert::TryInto;
 
+pub const TILE_TABLE_SIZE: usize = 32;
 pub type TileTable = Vec<Tile>;
 
 #[derive(Debug, Default, Clone, Copy)]

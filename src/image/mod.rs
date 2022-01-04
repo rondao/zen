@@ -2,13 +2,14 @@ use image::{Rgb, RgbImage};
 
 use crate::{
     graphics::{
-        gfx::{Gfx, Tile8, GFX_TILE_WIDTH, TILE_SIZE},
+        gfx::{Gfx, TileGfx, GFX_TILE_WIDTH, TILE_SIZE},
         palette::{COLORS_BY_SUB_PALETTE, NUMBER_OF_SUB_PALETTES},
         Palette, Rgb888,
     },
     super_metroid::{
         level_data::{Block, LevelData},
-        tile_table::TileTable,
+        tile_table::{TileTable, TILE_TABLE_SIZE},
+        tileset::{tileset_to_colors, TILESET_BLOCK_SIZE},
         SuperMetroid,
     },
 };
@@ -29,7 +30,7 @@ impl From<&Palette> for RgbImage {
     }
 }
 
-impl Tile8 {
+impl TileGfx {
     pub fn to_image(
         &self,
         image: &mut RgbImage,
@@ -59,7 +60,7 @@ impl Gfx {
             (GFX_TILE_WIDTH * TILE_SIZE) as u32,
             (self.tiles.len() * TILE_SIZE / GFX_TILE_WIDTH) as u32,
         );
-        for (color_number, index_color) in self.to_colors().iter().enumerate() {
+        for (color_number, index_color) in self.to_indexed_colors().iter().enumerate() {
             let color: Rgb888 =
                 palette.sub_palettes[sub_palette].colors[*index_color as usize].into();
 
@@ -74,24 +75,19 @@ impl Gfx {
 }
 
 pub fn tileset_to_image(tile_table: &TileTable, palette: &Palette, graphics: &Gfx) -> RgbImage {
-    let mut img: RgbImage = RgbImage::new(16 * 32, 16 * 32);
-
-    let mut tiles = tile_table.iter();
-    for ty in 0..32 {
-        for tx in 0..32 {
-            // Each tile is composed of 4 smaller 'tile8'.
-            for t in 0..4 {
-                let tile = tiles.next().unwrap();
-                let tile8 = &graphics.tiles[tile.gfx_index as usize];
-                tile8.to_image(
-                    &mut img,
-                    (tx * 16 + (t % 2) * 8, ty * 16 + (t / 2) * 8),
-                    (tile.x_flip, tile.y_flip),
-                    palette,
-                    tile.sub_palette as usize,
-                );
-            }
-        }
+    let mut img: RgbImage = RgbImage::new(
+        (TILESET_BLOCK_SIZE * TILE_TABLE_SIZE) as u32,
+        (TILESET_BLOCK_SIZE * TILE_TABLE_SIZE) as u32,
+    );
+    for (color_number, color) in tileset_to_colors(tile_table, palette, graphics)
+        .iter()
+        .enumerate()
+    {
+        img.put_pixel(
+            (color_number % (TILE_TABLE_SIZE * TILESET_BLOCK_SIZE)) as u32,
+            (color_number / (TILE_TABLE_SIZE * TILESET_BLOCK_SIZE)) as u32,
+            Rgb([color.r, color.g, color.b]),
+        );
     }
     img
 }

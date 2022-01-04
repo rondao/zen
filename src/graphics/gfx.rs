@@ -5,21 +5,21 @@ pub const GFX_TILE_WIDTH: usize = 16;
 
 #[derive(Debug, Default, Clone)]
 pub struct Gfx {
-    pub tiles: Vec<Tile8>,
+    pub tiles: Vec<TileGfx>,
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct Tile8 {
+pub struct TileGfx {
     pub colors: [u8; TILE_SIZE * TILE_SIZE],
 }
 
-impl Tile8 {
+impl TileGfx {
     /// Reference: https://sneslab.net/wiki/Graphics_Format
     ///  [r0, bp1], [r0, bp2], [r1, bp1], [r1, bp2], [r2, bp1], [r2, bp2], [r3, bp1], [r3, bp2]
     ///  [r4, bp1], [r4, bp2], [r5, bp1], [r5, bp2], [r6, bp1], [r6, bp2], [r7, bp1], [r7, bp2]
     ///  [r0, bp3], [r0, bp4], [r1, bp3], [r1, bp4], [r2, bp3], [r2, bp4], [r3, bp3], [r3, bp4]
     ///  [r4, bp3], [r4, bp4], [r5, bp3], [r5, bp4], [r6, bp3], [r6, bp4], [r7, bp3], [r7, bp4]
-    fn tile_4bpp(source: &[u8]) -> Tile8 {
+    fn tile_4bpp(source: &[u8]) -> TileGfx {
         let mut colors: Vec<u8> = Vec::with_capacity(TILE_SIZE * TILE_SIZE);
 
         // One half of the data has bits 0,1 and the other has bits 2,3 to compose one color.
@@ -38,7 +38,7 @@ impl Tile8 {
                 )
             }
         }
-        Tile8 {
+        TileGfx {
             colors: colors.try_into().unwrap(),
         }
     }
@@ -60,12 +60,15 @@ impl Tile8 {
 pub fn from_4bpp(source: &[u8]) -> Gfx {
     Gfx {
         // Each Tile8 has 8 rows, and each row needs 4 bytes for the 8 row's colors.
-        tiles: source.chunks(TILE_SIZE * 4).map(Tile8::tile_4bpp).collect(),
+        tiles: source
+            .chunks(TILE_SIZE * 4)
+            .map(TileGfx::tile_4bpp)
+            .collect(),
     }
 }
 
 impl Gfx {
-    pub fn to_colors(&self) -> Vec<u8> {
+    pub fn to_indexed_colors(&self) -> Vec<u8> {
         let mut gfx_index_colors = Vec::new();
         // Loop each Tile row
         for row_of_tiles in self.tiles.chunks(GFX_TILE_WIDTH) {

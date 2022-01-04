@@ -1,6 +1,9 @@
 use std::error::Error;
 
-use zen::super_metroid::{self, address::ROOMS};
+use zen::{
+    image::tileset_to_image,
+    super_metroid::{self, address::ROOMS},
+};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let sm = super_metroid::load_unheadered_rom(
@@ -15,6 +18,25 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("GFX: {:x}", *address);
         gfx.to_image(&sm.palettes[&(sm.tilesets[0].palette as usize)], 0)
             .save(format!("/home/rondao/dev/snes_data/{:x}.png", address))?;
+    }
+
+    for (i, tileset) in sm.tilesets.iter().enumerate() {
+        let image = if tileset.use_cre {
+            println!("Tileset with CRE: {}", i);
+            tileset_to_image(
+                &sm.tile_table_with_cre(tileset.tile_table as usize),
+                &sm.palettes[&(tileset.palette as usize)],
+                &sm.gfx_with_cre(tileset.graphic as usize),
+            )
+        } else {
+            println!("Tileset: {}", i);
+            tileset_to_image(
+                &sm.tile_tables[&(tileset.tile_table as usize)],
+                &sm.palettes[&(tileset.palette as usize)],
+                &sm.graphics[&(tileset.graphic as usize)],
+            )
+        };
+        image.save(format!("/home/rondao/dev/snes_data/tileset_{}.png", i))?;
     }
 
     for address in ROOMS {

@@ -16,7 +16,7 @@ use crate::{
     address::{LoRom, Pc},
     compress,
     graphics::{
-        gfx::{self, Gfx, Tile8},
+        gfx::{self, Gfx, TileGfx},
         palette, Palette,
     },
     ParseError,
@@ -56,7 +56,7 @@ impl SuperMetroid {
         Gfx {
             tiles: [
                 &self.graphics[&gfx].tiles[..],
-                &[Tile8 { colors: [0; 64] }; 64],
+                &[TileGfx { colors: [0; 64] }; 64],
                 &self.cre_gfx.tiles[..],
             ]
             .concat(),
@@ -85,7 +85,7 @@ pub fn load_unheadered_rom(filename: &str) -> Result<SuperMetroid, Box<dyn Error
     // Load all Tilesets.
     sm.tilesets = tileset::from_bytes(
         &sm.rom.offset(LoRom { address: TILESETS }.into())
-            [..tileset::TILESET_SIZE * tileset::NUMBER_OF_TILESETS],
+            [..tileset::TILESET_DATA_SIZE * tileset::NUMBER_OF_TILESETS],
     );
     // Load all Tilesets.
     for tileset in sm.tilesets.iter() {
