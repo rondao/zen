@@ -2,7 +2,8 @@ use image::{Rgb, RgbImage};
 
 use crate::{
     graphics::{
-        gfx::{Gfx, Tile8},
+        gfx::{Gfx, Tile8, GFX_TILE_WIDTH, TILE_SIZE},
+        palette::{COLORS_BY_SUB_PALETTE, NUMBER_OF_SUB_PALETTES},
         Palette, Rgb888,
     },
     super_metroid::{
@@ -16,11 +17,12 @@ impl From<&Palette> for RgbImage {
     fn from(item: &Palette) -> Self {
         let mut palette_colors = item.to_colors().into_iter();
 
-        let mut img: RgbImage = RgbImage::new(16, 16);
-        for y in 0..16 {
-            for x in 0..16 {
+        let mut img: RgbImage =
+            RgbImage::new(NUMBER_OF_SUB_PALETTES as u32, COLORS_BY_SUB_PALETTE as u32);
+        for y in 0..NUMBER_OF_SUB_PALETTES {
+            for x in 0..COLORS_BY_SUB_PALETTE {
                 let color = palette_colors.next().unwrap();
-                img.put_pixel(x, y, Rgb([color.r, color.g, color.b]));
+                img.put_pixel(x as u32, y as u32, Rgb([color.r, color.g, color.b]));
             }
         }
         img
@@ -42,8 +44,8 @@ impl Tile8 {
                 let color: Rgb888 =
                     palette.sub_palettes[sub_palette].colors[*idx_color as usize].into();
                 image.put_pixel(
-                    (origin.0 + pixel % 8) as u32,
-                    (origin.1 + pixel / 8) as u32,
+                    (origin.0 + pixel % TILE_SIZE) as u32,
+                    (origin.1 + pixel / TILE_SIZE) as u32,
                     Rgb([color.r, color.g, color.b]),
                 );
             }
@@ -53,22 +55,28 @@ impl Tile8 {
 
 impl Gfx {
     pub fn to_image(&self, palette: &Palette, sub_palette: usize) -> RgbImage {
-        let mut img: RgbImage = RgbImage::new(16 * 8, self.tiles.len() as u32);
-        for (tile_num, tile) in self.tiles.iter().enumerate() {
-            // Position of the Tile8 we are drawing.
-            let tx = (tile_num % 16) * 8;
-            let ty = (tile_num / 16) * 8;
+        let mut img: RgbImage = RgbImage::new(
+            (GFX_TILE_WIDTH * TILE_SIZE) as u32,
+            (self.tiles.len() * TILE_SIZE / GFX_TILE_WIDTH) as u32,
+        );
+        for (color_number, index_color) in self.to_colors().iter().enumerate() {
+            let color: Rgb888 =
+                palette.sub_palettes[sub_palette].colors[*index_color as usize].into();
 
-            tile.to_image(&mut img, (tx, ty), (false, false), palette, sub_palette);
+            img.put_pixel(
+                (color_number % (GFX_TILE_WIDTH * TILE_SIZE)) as u32,
+                (color_number / (GFX_TILE_WIDTH * TILE_SIZE)) as u32,
+                Rgb([color.r, color.g, color.b]),
+            );
         }
         img
     }
 }
 
-pub fn tileset_to_image(tileset: &TileTable, palette: &Palette, graphics: &Gfx) -> RgbImage {
+pub fn tileset_to_image(tile_table: &TileTable, palette: &Palette, graphics: &Gfx) -> RgbImage {
     let mut img: RgbImage = RgbImage::new(16 * 32, 16 * 32);
 
-    let mut tiles = tileset.iter();
+    let mut tiles = tile_table.iter();
     for ty in 0..32 {
         for tx in 0..32 {
             // Each tile is composed of 4 smaller 'tile8'.

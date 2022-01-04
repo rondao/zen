@@ -2,9 +2,11 @@ use std::convert::TryInto;
 
 use crate::ParseError;
 
+pub const NUMBER_OF_SUB_PALETTES: usize = 16;
+
 #[derive(Debug, Default, Clone)]
 pub struct Palette {
-    pub sub_palettes: [SubPalette; 16],
+    pub sub_palettes: [SubPalette; NUMBER_OF_SUB_PALETTES],
 }
 
 /// Palette format reference: https://georgjz.github.io/snesaa03/
@@ -39,23 +41,26 @@ pub fn from_bytes(mut source: &[u8]) -> Result<Palette, ParseError> {
         .collect();
 
     let mut sub_palettes = sub_palettes?;
-    if sub_palettes.len() < 16 {
-        sub_palettes.extend(vec![SubPalette::default(); 16 - sub_palettes.len()]);
+    if sub_palettes.len() < NUMBER_OF_SUB_PALETTES {
+        sub_palettes.extend(vec![
+            SubPalette::default();
+            NUMBER_OF_SUB_PALETTES - sub_palettes.len()
+        ]);
     }
 
-    if sub_palettes.len() <= 16 {
+    if sub_palettes.len() <= NUMBER_OF_SUB_PALETTES {
         Ok(Palette {
             sub_palettes: sub_palettes.try_into().unwrap(),
         })
     } else {
-        // Palette need exact 16 subpalettes.
+        // Palette need exact NUMBER_OF_SUB_PALETTES subpalettes.
         Err(ParseError)
     }
 }
 
 impl Palette {
     pub fn to_colors(&self) -> Vec<Rgb888> {
-        let mut color_vec = Vec::with_capacity(16 * 16);
+        let mut color_vec = Vec::with_capacity(NUMBER_OF_SUB_PALETTES * COLORS_BY_SUB_PALETTE);
         for sub_palette in self.sub_palettes.iter() {
             color_vec.extend(
                 sub_palette
@@ -69,7 +74,8 @@ impl Palette {
     }
 }
 
-const COLORS_BY_SUB_PALETTE: usize = 16;
+pub const COLORS_BY_SUB_PALETTE: usize = 16;
+
 #[derive(Debug, Default, Clone, Copy)]
 pub struct SubPalette {
     pub colors: [Bgr555; COLORS_BY_SUB_PALETTE],
