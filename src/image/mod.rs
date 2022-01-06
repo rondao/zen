@@ -7,7 +7,7 @@ use crate::{
         Palette, Rgb888,
     },
     super_metroid::{
-        level_data::{Block, LevelData},
+        level_data::{LevelData, BLOCKS_PER_SCREEN},
         tile_table::{TileTable, TILE_TABLE_SIZE},
         tileset::{tileset_to_colors, TILESET_BLOCK_SIZE},
         SuperMetroid,
@@ -75,7 +75,7 @@ impl Gfx {
 }
 
 pub fn tileset_to_image(tile_table: &TileTable, palette: &Palette, graphics: &Gfx) -> RgbImage {
-    let mut img: RgbImage = RgbImage::new(
+    let mut image: RgbImage = RgbImage::new(
         (TILESET_BLOCK_SIZE * TILE_TABLE_SIZE) as u32,
         (TILESET_BLOCK_SIZE * TILE_TABLE_SIZE) as u32,
     );
@@ -83,13 +83,13 @@ pub fn tileset_to_image(tile_table: &TileTable, palette: &Palette, graphics: &Gf
         .iter()
         .enumerate()
     {
-        img.put_pixel(
-            (color_number % (TILE_TABLE_SIZE * TILESET_BLOCK_SIZE)) as u32,
-            (color_number / (TILE_TABLE_SIZE * TILESET_BLOCK_SIZE)) as u32,
+        image.put_pixel(
+            (color_number % image.width() as usize) as u32,
+            (color_number / image.width() as usize) as u32,
             Rgb([color.r, color.g, color.b]),
         );
     }
-    img
+    image
 }
 
 impl LevelData {
@@ -100,72 +100,22 @@ impl LevelData {
         palette: &Palette,
         graphics: &Gfx,
     ) -> RgbImage {
-        let mut image: RgbImage = RgbImage::new(16 * 16 * size.0 as u32, 16 * 16 * size.1 as u32);
-        if let Some(layer2) = &self.layer2 {
-            self.layer_to_image(
-                &mut image,
-                size,
-                &mut layer2.iter(),
-                tile_table,
-                palette,
-                graphics,
+        let mut image: RgbImage = RgbImage::new(
+            (BLOCKS_PER_SCREEN * TILE_SIZE * 2 * size.0) as u32,
+            (BLOCKS_PER_SCREEN * TILE_SIZE * 2 * size.1) as u32,
+        );
+        for (color_number, color) in self
+            .to_colors(size, tile_table, palette, graphics)
+            .iter()
+            .enumerate()
+        {
+            image.put_pixel(
+                (color_number % image.width() as usize) as u32,
+                (color_number / image.width() as usize) as u32,
+                Rgb([color.r, color.g, color.b]),
             );
         }
-        self.layer_to_image(
-            &mut image,
-            size,
-            &mut self.layer1.iter(),
-            tile_table,
-            palette,
-            graphics,
-        );
-
         image
-    }
-
-    fn layer_to_image<'a>(
-        &self,
-        image: &mut RgbImage,
-        size: (usize, usize),
-        blocks: &mut impl Iterator<Item = &'a Block>,
-        tile_table: &TileTable,
-        palette: &Palette,
-        graphics: &Gfx,
-    ) {
-        for index in 0..(16 * size.0 as usize * 16 * size.1 as usize) {
-            if let Some(block) = blocks.next() {
-                let tileset_tile = block.block_number as usize * 4;
-                let mut tiles: Vec<_> = tile_table[tileset_tile..tileset_tile + 4]
-                    .iter()
-                    .copied()
-                    .collect();
-
-                if block.x_flip {
-                    tiles.swap(0, 1);
-                    tiles.swap(2, 3);
-                }
-                if block.y_flip {
-                    tiles.swap(0, 2);
-                    tiles.swap(1, 3);
-                }
-
-                // Each block is composed of 4 smaller 'tile8'.
-                for t in 0..4 {
-                    let tile = tiles[t];
-                    let tile8 = &graphics.tiles[tile.gfx_index as usize];
-                    tile8.to_image(
-                        image,
-                        (
-                            (index % (size.0 * 16)) * 16 + (t % 2) * 8,
-                            (index / (size.0 * 16)) * 16 + (t / 2) * 8,
-                        ),
-                        (tile.x_flip ^ block.x_flip, tile.y_flip ^ block.y_flip),
-                        palette,
-                        tile.sub_palette as usize,
-                    );
-                }
-            }
-        }
     }
 }
 

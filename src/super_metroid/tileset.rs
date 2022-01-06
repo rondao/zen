@@ -3,7 +3,7 @@ use crate::graphics::{
     palette::{Palette, Rgb888},
 };
 
-use super::tile_table::{TileTable, TILE_TABLE_SIZE};
+use super::tile_table::{TileTable, TILES_BY_BLOCK, TILE_TABLE_SIZE};
 
 pub const TILESET_BLOCK_SIZE: usize = 16;
 pub const TILESET_DATA_SIZE: usize = 9;
@@ -34,8 +34,8 @@ pub fn from_bytes(source: &[u8]) -> Vec<Tileset> {
 
 pub fn tileset_to_colors(tile_table: &TileTable, palette: &Palette, graphics: &Gfx) -> Vec<Rgb888> {
     let mut colors = Vec::new();
-    // Add colors of each row of blocks a time. Each block is composed of 4 smaller 'TileGfx'.
-    for row_of_blocks in tile_table.chunks(TILE_TABLE_SIZE * 4) {
+    // Add colors of each row of blocks a time. Each block is composed of 'TILES_BY_BLOCK' smaller 'TileGfx'.
+    for row_of_blocks in tile_table.chunks(TILE_TABLE_SIZE * TILES_BY_BLOCK) {
         // Each block has two rows of tiles. Let's add colors for the top row of tiles, and then the bottow row.
         for tile_row in 0..=1 {
             // Each tile have 'TILE_SIZE' rows of colors. Let's add all colors of each row at a time.

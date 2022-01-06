@@ -1,6 +1,11 @@
 use std::convert::TryInto;
 
+use crate::graphics::gfx::TILE_SIZE;
+
 pub const TILE_TABLE_SIZE: usize = 32;
+pub const TILES_BY_BLOCK: usize = 4;
+pub const BLOCK_SIZE: usize = TILE_SIZE * 2;
+
 pub type TileTable = Vec<Tile>;
 
 #[derive(Debug, Default, Clone, Copy)]

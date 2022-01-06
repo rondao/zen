@@ -1,6 +1,14 @@
 use std::convert::TryInto;
 
-use crate::ParseError;
+use crate::{
+    graphics::{
+        gfx::{Gfx, TILE_SIZE},
+        palette::{Palette, Rgb888},
+    },
+    ParseError,
+};
+
+use super::tile_table::{TileTable, BLOCK_SIZE, TILES_BY_BLOCK};
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Block {
@@ -11,6 +19,8 @@ pub struct Block {
 }
 
 type BtsBlock = u8;
+
+pub const BLOCKS_PER_SCREEN: usize = 16;
 
 #[derive(Debug, Default, Clone)]
 pub struct LevelData {
@@ -68,4 +78,85 @@ fn layer_from_bytes(source: &[u8]) -> Vec<Block> {
             }
         })
         .collect()
+}
+
+impl LevelData {
+    pub fn to_colors(
+        &self,
+        size: (usize, usize),
+        tile_table: &TileTable,
+        palette: &Palette,
+        graphics: &Gfx,
+    ) -> Vec<Rgb888> {
+        let pixels_per_side = BLOCKS_PER_SCREEN * BLOCK_SIZE;
+        let mut colors =
+            vec![Rgb888::default(); pixels_per_side * size.0 * pixels_per_side * size.1];
+
+        if let Some(layer2) = &self.layer2 {
+            self.layer_to_colors(size, &mut colors, &layer2, tile_table, palette, graphics);
+        }
+        self.layer_to_colors(
+            size,
+            &mut colors,
+            &self.layer1,
+            tile_table,
+            palette,
+            graphics,
+        );
+
+        colors
+    }
+
+    fn layer_to_colors<'a>(
+        &self,
+        size: (usize, usize),
+        colors: &mut Vec<Rgb888>,
+        blocks: &Vec<Block>,
+        tile_table: &TileTable,
+        palette: &Palette,
+        graphics: &Gfx,
+    ) {
+        for i_block in 0..(BLOCKS_PER_SCREEN * size.0 * BLOCKS_PER_SCREEN * size.1) {
+            let block = blocks[i_block];
+
+            let tileset_tile = block.block_number as usize * TILES_BY_BLOCK;
+            let mut tiles: Vec<_> = tile_table[tileset_tile..tileset_tile + TILES_BY_BLOCK]
+                .iter()
+                .copied()
+                .collect();
+
+            if block.x_flip {
+                tiles.swap(0, 1);
+                tiles.swap(2, 3);
+            }
+            if block.y_flip {
+                tiles.swap(0, 2);
+                tiles.swap(1, 3);
+            }
+
+            for (i_tile, tile) in tiles.iter().enumerate() {
+                for (i_color, index_color) in graphics.tiles[tile.gfx_index as usize]
+                    .flip((tile.x_flip ^ block.x_flip, tile.y_flip ^ block.y_flip))
+                    .iter()
+                    .enumerate()
+                {
+                    if *index_color != 0 {
+                        let pixel_per_width = BLOCKS_PER_SCREEN * size.0;
+
+                        let y = (i_block / pixel_per_width)
+                            * (BLOCKS_PER_SCREEN * pixel_per_width * BLOCK_SIZE)
+                            + (i_tile / 2) * TILE_SIZE * pixel_per_width * BLOCK_SIZE
+                            + (i_color / TILE_SIZE) * pixel_per_width * BLOCK_SIZE;
+                        let x = (i_block % pixel_per_width) * BLOCK_SIZE
+                            + (i_tile % 2) * TILE_SIZE
+                            + (i_color % TILE_SIZE);
+
+                        colors[y + x] = palette.sub_palettes[tile.sub_palette as usize].colors
+                            [*index_color as usize]
+                            .into();
+                    }
+                }
+            }
+        }
+    }
 }
