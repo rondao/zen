@@ -2,7 +2,7 @@ use std::convert::TryInto;
 
 use crate::ParseError;
 
-pub const NUMBER_OF_SUB_PALETTES: usize = 16;
+pub const NUMBER_OF_SUB_PALETTES: usize = 8;
 
 #[derive(Debug, Default, Clone)]
 pub struct Palette {

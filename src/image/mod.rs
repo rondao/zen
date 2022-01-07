@@ -19,7 +19,7 @@ impl From<&Palette> for RgbImage {
         let mut palette_colors = item.to_colors().into_iter();
 
         let mut img: RgbImage =
-            RgbImage::new(NUMBER_OF_SUB_PALETTES as u32, COLORS_BY_SUB_PALETTE as u32);
+            RgbImage::new(COLORS_BY_SUB_PALETTE as u32, NUMBER_OF_SUB_PALETTES as u32);
         for y in 0..NUMBER_OF_SUB_PALETTES {
             for x in 0..COLORS_BY_SUB_PALETTE {
                 let color = palette_colors.next().unwrap();
