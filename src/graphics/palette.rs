@@ -60,9 +60,9 @@ pub fn from_bytes(mut source: &[u8]) -> Result<Palette, ParseError> {
 
 impl Palette {
     pub fn to_colors(&self) -> Vec<Rgb888> {
-        let mut color_vec = Vec::with_capacity(NUMBER_OF_SUB_PALETTES * COLORS_BY_SUB_PALETTE);
+        let mut colors = Vec::with_capacity(NUMBER_OF_SUB_PALETTES * COLORS_BY_SUB_PALETTE);
         for sub_palette in self.sub_palettes.iter() {
-            color_vec.extend(
+            colors.extend(
                 sub_palette
                     .colors
                     .iter()
@@ -70,7 +70,23 @@ impl Palette {
                     .into_iter(),
             );
         }
-        color_vec
+        colors
+    }
+
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut bytes = Vec::with_capacity(NUMBER_OF_SUB_PALETTES * COLORS_BY_SUB_PALETTE * 2);
+        for sub_palette in self.sub_palettes.iter() {
+            bytes.extend(
+                sub_palette
+                    .colors
+                    .iter()
+                    .fold(Vec::new(), |mut accum, value| {
+                        accum.extend(value.to_bytes());
+                        accum
+                    }),
+            );
+        }
+        bytes
     }
 }
 
@@ -110,6 +126,12 @@ impl Bgr555 {
             }),
             _ => Err(ParseError),
         }
+    }
+
+    fn to_bytes(&self) -> [u8; 2] {
+        let high_byte = (self.u << 7) + (self.b << 2) + ((self.g & 0b11000) >> 3);
+        let low_byte = ((self.g & 0b111) << 5) + self.r;
+        [low_byte, high_byte] // Little Endian.
     }
 }
 
