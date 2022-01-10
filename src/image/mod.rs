@@ -14,9 +14,9 @@ use crate::{
     },
 };
 
-impl From<&Palette> for RgbImage {
-    fn from(item: &Palette) -> Self {
-        let mut palette_colors = item.to_colors().into_iter();
+impl Palette {
+    pub fn to_image(&self) -> RgbImage {
+        let mut palette_colors = self.to_colors().into_iter();
 
         let mut img: RgbImage =
             RgbImage::new(COLORS_BY_SUB_PALETTE as u32, NUMBER_OF_SUB_PALETTES as u32);
