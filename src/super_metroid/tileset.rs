@@ -17,6 +17,18 @@ pub struct Tileset {
     pub use_cre: bool,
 }
 
+impl Tileset {
+    pub fn to_bytes(&self) -> Vec<u8> {
+        // Values are 'u32', but should be 'u24'. So we remove the extra byte.
+        [
+            &self.tile_table.to_le_bytes()[..3],
+            &self.graphic.to_le_bytes()[..3],
+            &self.palette.to_le_bytes()[..3],
+        ]
+        .concat()
+    }
+}
+
 #[rustfmt::skip]
 pub fn from_bytes(source: &[u8]) -> Vec<Tileset> {
     source
