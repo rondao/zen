@@ -1,4 +1,4 @@
-use std::{error::Error, fmt, io::Read};
+use std::{error::Error, fmt};
 
 /// Decompress 'source' with lz5 algorithm.
 /// Reference: http://patrickjohnston.org/bank/80#fB0FF

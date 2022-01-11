@@ -1,20 +1,24 @@
 use std::error::Error;
 
-use image::RgbImage;
 use zen::{
+    compress::compress_lz5,
     image::tileset_to_image,
-    super_metroid::{self, address::ROOMS},
+    super_metroid::{self, address::ROOMS, Offset},
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let sm = super_metroid::load_unheadered_rom(
+    let mut sm = super_metroid::load_unheadered_rom(
         "/home/rondao/dev/snes_data/Super Metroid (JU) [!].smc",
     )?;
 
+    sm.save_to_file("/home/rondao/roms/snes/MyHack.smc")
+        .unwrap();
+
     for (address, palette) in sm.palettes.iter() {
         println!("Palette: {:x}", address);
-        let image: RgbImage = palette.into();
-        image.save(format!("/home/rondao/dev/snes_data/{:x}.png", address))?;
+        palette
+            .to_image()
+            .save(format!("/home/rondao/dev/snes_data/{:x}.png", address))?;
     }
 
     for (address, gfx) in sm

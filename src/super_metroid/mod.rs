@@ -14,7 +14,7 @@ use std::{
 
 use crate::{
     address::{LoRom, Pc},
-    compress,
+    compress::{self, compress_lz5, decompress_lz5},
     graphics::{
         gfx::{self, Gfx, TileGfx},
         palette, Palette,
@@ -65,6 +65,47 @@ impl SuperMetroid {
 
     pub fn tile_table_with_cre(&self, tileset: usize) -> TileTable {
         [&self.cre_tileset[..], &self.tile_tables[&tileset]].concat()
+    }
+
+    pub fn save_to_file(&mut self, filename: &str) -> std::io::Result<()> {
+        let mut remaped_palettes: HashMap<usize, Palette> = HashMap::default();
+        let mut pc_to_write: Pc = LoRom { address: 0xC2AD7C }.into();
+
+        // Compress every palette and save to ROM.
+        for (pal_address, palette) in self.palettes.iter() {
+            let pal_compressed_bytes = compress_lz5(&palette.to_bytes());
+            let number_of_bytes = pal_compressed_bytes.len();
+
+            self.rom.splice(
+                pc_to_write.address..pc_to_write.address + number_of_bytes,
+                pal_compressed_bytes,
+            );
+
+            // Palettes are saved at different Address. Tileset references to it needs to be changed accordingly.
+            for tileset in self.tilesets.iter_mut() {
+                if tileset.palette == *pal_address as u32 {
+                    let add: LoRom = pc_to_write.into();
+                    tileset.palette = add.address as u32;
+                }
+            }
+
+            remaped_palettes.insert(LoRom::from(pc_to_write).address, palette.clone());
+            pc_to_write.address += number_of_bytes;
+        }
+        self.palettes = remaped_palettes;
+
+        // Write tilesets to ROM.
+        let tileset_address: Pc = LoRom { address: TILESETS }.into();
+        let tilesets_as_bytes = self.tilesets.iter().fold(Vec::new(), |mut accum, tileset| {
+            accum.extend(tileset.to_bytes());
+            accum
+        });
+        self.rom.splice(
+            tileset_address.address..tileset_address.address + tilesets_as_bytes.len(),
+            tilesets_as_bytes,
+        );
+
+        fs::write(filename, &self.rom)
     }
 
     fn check_md5(&self) -> bool {
