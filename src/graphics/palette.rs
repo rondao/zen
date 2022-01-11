@@ -171,18 +171,23 @@ impl From<&Bgr555> for Rgb888 {
 
 #[cfg(test)]
 mod tests {
+    use std::error::Error;
+
     use super::*;
 
+    /// The types Bgr555 and Rgb888 should be convertable bewteen themselves.
     #[test]
-    fn test_bgr555_and_rgb888_convertion() {
+    fn convert_bgr555_and_rgb888_between_themselves() {
         let bgr555_and_rgb888_colors = [
             (
+                // Bgr555 { r: 0, g: 0, b: 0, u: 0 }
                 Bgr555 {
                     r: 0b00000,
                     g: 0b00000,
                     b: 0b00000,
                     u: 0,
                 },
+                // Rgb888 { r: 0, g: 0, b: 0 }
                 Rgb888 {
                     r: 0b00000000,
                     g: 0b00000000,
@@ -190,12 +195,14 @@ mod tests {
                 },
             ),
             (
+                // Bgr555 { r: 23, g: 27, b: 29, u: 0 }
                 Bgr555 {
                     r: 0b10111,
                     g: 0b11011,
                     b: 0b11101,
                     u: 0,
                 },
+                // Rgb888 { r: 184, g: 216, b: 232 }
                 Rgb888 {
                     r: 0b10111000,
                     g: 0b11011000,
@@ -203,12 +210,14 @@ mod tests {
                 },
             ),
             (
+                // Bgr555 { r: r: 10, g: 21, b: 7, u: 0 }
                 Bgr555 {
                     r: 0b01010,
                     g: 0b10101,
                     b: 0b00111,
                     u: 0,
                 },
+                // Rgb888 { r: 80, g: 84, b: 56 }
                 Rgb888 {
                     r: 0b01010000,
                     g: 0b10101000,
@@ -216,12 +225,14 @@ mod tests {
                 },
             ),
             (
+                // Bgr555 { r: 31, g: 31, b: 31, u: 0 }
                 Bgr555 {
                     r: 0b11111,
                     g: 0b11111,
                     b: 0b11111,
                     u: 0,
                 },
+                // Rgb888 { r: 248, g: 248, b: 248 }
                 Rgb888 {
                     r: 0b11111000,
                     g: 0b11111000,
@@ -234,5 +245,60 @@ mod tests {
             assert_eq!(bgr555, Bgr555::from(rgb888));
             assert_eq!(rgb888, Rgb888::from(bgr555));
         }
+    }
+
+    /// Load a color in Bgr555 format from two bytes.
+    /// Expected format: [UBBB_BBGG, GGGR_RRRR]
+    #[test]
+    fn load_bgr555_from_two_bytes() -> Result<(), Box<dyn Error>> {
+        // Bytes are in Little-Endian.
+        let bytes_and_expected_bgr555 = [
+            (
+                // Bgr555 { r: 0, g: 0, b: 0, u: 0 }
+                Bgr555 {
+                    r: 0b00000,
+                    g: 0b00000,
+                    b: 0b00000,
+                    u: 0,
+                },
+                [0b0_00000_00, 0b000_00000],
+            ),
+            (
+                // Bgr555 { r: 23, g: 27, b: 29, u: 1 }
+                Bgr555 {
+                    r: 0b10111,
+                    g: 0b11011,
+                    b: 0b11101,
+                    u: 1,
+                },
+                [0b011_10111, 0b1_11101_11],
+            ),
+            (
+                // Bgr555 { r: 10, g: 21, b: 7, u: 0 }
+                Bgr555 {
+                    r: 0b01010,
+                    g: 0b10101,
+                    b: 0b00111,
+                    u: 0,
+                },
+                [0b1_01010_10, 0b000_11110],
+            ),
+            (
+                // Bgr555 { r: 31, g: 31, b: 31, u: 1 }
+                Bgr555 {
+                    r: 0b11111,
+                    g: 0b11111,
+                    b: 0b11111,
+                    u: 1,
+                },
+                [0b1_11111_11, 0b111_11111],
+            ),
+        ];
+
+        for (bgr555, bytes) in bytes_and_expected_bgr555 {
+            assert_eq!(bgr555, Bgr555::from_bytes(&bytes)?);
+        }
+
+        Ok(())
     }
 }
