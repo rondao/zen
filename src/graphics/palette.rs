@@ -248,9 +248,10 @@ mod tests {
     }
 
     /// Load a color in Bgr555 format from two bytes.
-    /// Expected format: [UBBB_BBGG, GGGR_RRRR]
+    /// Convert the Bgr555 type format into two bytes.
+    /// Expected byte format: [UBBB_BBGG, GGGR_RRRR]
     #[test]
-    fn load_bgr555_from_two_bytes() -> Result<(), Box<dyn Error>> {
+    fn convert_bgr555_from_and_into_two_bytes() -> Result<(), Box<dyn Error>> {
         // Bytes are in Little-Endian.
         let bytes_and_expected_bgr555 = [
             (
@@ -297,13 +298,14 @@ mod tests {
 
         for (bgr555, bytes) in bytes_and_expected_bgr555 {
             assert_eq!(bgr555, Bgr555::from_bytes(&bytes)?);
+            assert_eq!(bytes, bgr555.to_bytes());
         }
 
         Ok(())
     }
 
     /// Load a color in Bgr555 format from three bytes.
-    /// Expected format: [BBBB_BXXX, GGGG_GXXX, RRRR_RXXX]
+    /// Expected byte format: [BBBB_BXXX, GGGG_GXXX, RRRR_RXXX]
     #[test]
     fn load_bgr555_from_three_bytes() -> Result<(), Box<dyn Error>> {
         // Bytes are in Little-Endian.
