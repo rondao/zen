@@ -301,4 +301,59 @@ mod tests {
 
         Ok(())
     }
+
+    /// Load a color in Bgr555 format from three bytes.
+    /// Expected format: [BBBB_BXXX, GGGG_GXXX, RRRR_RXXX]
+    #[test]
+    fn load_bgr555_from_three_bytes() -> Result<(), Box<dyn Error>> {
+        // Bytes are in Little-Endian.
+        let bytes_and_expected_bgr555 = [
+            (
+                // Bgr555 { r: 0, g: 0, b: 0, u: 0 }
+                Bgr555 {
+                    r: 0b00000,
+                    g: 0b00000,
+                    b: 0b00000,
+                    u: 0,
+                },
+                [0b00000_000, 0b00000_000, 0b00000_000],
+            ),
+            (
+                // Bgr555 { r: 23, g: 27, b: 29, u: 1 }
+                Bgr555 {
+                    r: 0b10111,
+                    g: 0b11011,
+                    b: 0b11101,
+                    u: 0,
+                },
+                [0b10111_000, 0b11011_000, 0b11101_000],
+            ),
+            (
+                // Bgr555 { r: 10, g: 21, b: 7, u: 0 }
+                Bgr555 {
+                    r: 0b01010,
+                    g: 0b10101,
+                    b: 0b00111,
+                    u: 0,
+                },
+                [0b01010_000, 0b10101_000, 0b00111_000],
+            ),
+            (
+                // Bgr555 { r: 31, g: 31, b: 31, u: 1 }
+                Bgr555 {
+                    r: 0b11111,
+                    g: 0b11111,
+                    b: 0b11111,
+                    u: 0,
+                },
+                [0b11111_000, 0b11111_000, 0b11111_000],
+            ),
+        ];
+
+        for (bgr555, bytes) in bytes_and_expected_bgr555 {
+            assert_eq!(bgr555, Bgr555::from_bytes(&bytes)?);
+        }
+
+        Ok(())
+    }
 }
