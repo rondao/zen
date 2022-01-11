@@ -356,4 +356,13 @@ mod tests {
 
         Ok(())
     }
+
+    /// Fail loading a color in Bgr555 format from incorred sized bytes.
+    /// Expected format: [BBBB_BXXX, GGGG_GXXX, RRRR_RXXX]
+    #[test]
+    fn fail_to_load_bgr555_from_incorrect_sized_bytes() {
+        assert!(Bgr555::from_bytes(&[]).is_err());
+        assert!(Bgr555::from_bytes(&[0x00]).is_err());
+        assert!(Bgr555::from_bytes(&[0x00, 0x00, 0x00, 0x00]).is_err());
+    }
 }
