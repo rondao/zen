@@ -320,8 +320,15 @@ fn count_sliding_dictonary(source: &[u8], sliding_window: &[u8]) -> (usize, usiz
             }
         }
     }
+    // 'number_of_bytes' have the last index. We add one for total number of bytes.
+    number_of_bytes += 1;
 
-    (number_of_bytes, window_address)
+    // It takes two bytes for the command + data. If it doesn't compress at least two, it's not worth it.
+    if number_of_bytes > 2 {
+        (number_of_bytes, window_address)
+    } else {
+        (0, 0)
+    }
 }
 
 /// Return 'bytes' from 'source'.
