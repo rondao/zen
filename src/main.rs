@@ -1,9 +1,8 @@
 use std::error::Error;
 
 use zen::{
-    compress::compress_lz5,
     image::tileset_to_image,
-    super_metroid::{self, address::ROOMS, Offset},
+    super_metroid::{self, address::ROOMS},
 };
 
 fn main() -> Result<(), Box<dyn Error>> {

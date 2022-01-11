@@ -97,7 +97,7 @@ pub struct SubPalette {
     pub colors: [Bgr555; COLORS_BY_SUB_PALETTE],
 }
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Bgr555 {
     pub r: u8,
     pub g: u8,
@@ -146,7 +146,7 @@ impl From<Rgb888> for Bgr555 {
     }
 }
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Rgb888 {
     pub r: u8,
     pub g: u8,
@@ -165,6 +165,74 @@ impl From<&Bgr555> for Rgb888 {
             r: color.r << 3,
             g: color.g << 3,
             b: color.b << 3,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_bgr555_and_rgb888_convertion() {
+        let bgr555_and_rgb888_colors = [
+            (
+                Bgr555 {
+                    r: 0b00000,
+                    g: 0b00000,
+                    b: 0b00000,
+                    u: 0,
+                },
+                Rgb888 {
+                    r: 0b00000000,
+                    g: 0b00000000,
+                    b: 0b00000000,
+                },
+            ),
+            (
+                Bgr555 {
+                    r: 0b10111,
+                    g: 0b11011,
+                    b: 0b11101,
+                    u: 0,
+                },
+                Rgb888 {
+                    r: 0b10111000,
+                    g: 0b11011000,
+                    b: 0b11101000,
+                },
+            ),
+            (
+                Bgr555 {
+                    r: 0b01010,
+                    g: 0b10101,
+                    b: 0b00111,
+                    u: 0,
+                },
+                Rgb888 {
+                    r: 0b01010000,
+                    g: 0b10101000,
+                    b: 0b00111000,
+                },
+            ),
+            (
+                Bgr555 {
+                    r: 0b11111,
+                    g: 0b11111,
+                    b: 0b11111,
+                    u: 0,
+                },
+                Rgb888 {
+                    r: 0b11111000,
+                    g: 0b11111000,
+                    b: 0b11111000,
+                },
+            ),
+        ];
+
+        for (bgr555, rgb888) in bgr555_and_rgb888_colors {
+            assert_eq!(bgr555, Bgr555::from(rgb888));
+            assert_eq!(rgb888, Rgb888::from(bgr555));
         }
     }
 }

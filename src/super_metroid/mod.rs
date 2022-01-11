@@ -14,7 +14,7 @@ use std::{
 
 use crate::{
     address::{LoRom, Pc},
-    compress::{self, compress_lz5, decompress_lz5},
+    compress::{self, compress_lz5},
     graphics::{
         gfx::{self, Gfx, TileGfx},
         palette, Palette,
