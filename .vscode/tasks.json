@@ -53,6 +53,7 @@
 		},
 		{
 			"label": "Test with coverage",
+			"dependsOrder": "sequence",
 			"dependsOn": [
 				"rust: cargo test",
 				"Generate lcov"
