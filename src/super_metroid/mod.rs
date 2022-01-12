@@ -14,7 +14,7 @@ use std::{
 
 use crate::{
     address::{LoRom, Pc},
-    compress::{self, compress_lz5},
+    compress::{lz5_compress, lz5_decompress},
     graphics::{
         gfx::{self, Gfx, TileGfx},
         palette, Palette,
@@ -73,7 +73,7 @@ impl SuperMetroid {
 
         // Compress every palette and save to ROM.
         for (pal_address, palette) in self.palettes.iter() {
-            let pal_compressed_bytes = compress_lz5(&palette.to_bytes());
+            let pal_compressed_bytes = lz5_compress(&palette.to_bytes());
             let number_of_bytes = pal_compressed_bytes.len();
 
             self.rom.splice(
@@ -133,7 +133,7 @@ pub fn load_unheadered_rom(filename: &str) -> Result<SuperMetroid, Box<dyn Error
         // Load it's Palette.
         sm.palettes
             .entry(tileset.palette as usize)
-            .or_insert(palette::from_bytes(&compress::decompress_lz5(
+            .or_insert(palette::from_bytes(&lz5_decompress(
                 sm.rom.offset(
                     LoRom {
                         address: tileset.palette as usize,
@@ -145,7 +145,7 @@ pub fn load_unheadered_rom(filename: &str) -> Result<SuperMetroid, Box<dyn Error
         // Load it's Graphics.
         sm.graphics
             .entry(tileset.graphic as usize)
-            .or_insert(gfx::from_4bpp(&compress::decompress_lz5(
+            .or_insert(gfx::from_4bpp(&lz5_decompress(
                 sm.rom.offset(
                     LoRom {
                         address: tileset.graphic as usize,
@@ -157,7 +157,7 @@ pub fn load_unheadered_rom(filename: &str) -> Result<SuperMetroid, Box<dyn Error
         // Load all Tile Tables.
         sm.tile_tables
             .entry(tileset.tile_table as usize)
-            .or_insert(tile_table::from_bytes(&compress::decompress_lz5(
+            .or_insert(tile_table::from_bytes(&lz5_decompress(
                 sm.rom.offset(
                     LoRom {
                         address: tileset.tile_table as usize,
@@ -168,12 +168,12 @@ pub fn load_unheadered_rom(filename: &str) -> Result<SuperMetroid, Box<dyn Error
     }
 
     // Load CRE graphic.
-    sm.cre_gfx = gfx::from_4bpp(&compress::decompress_lz5(
+    sm.cre_gfx = gfx::from_4bpp(&lz5_decompress(
         sm.rom.offset(LoRom { address: CRE_GFX }.into()),
     )?);
 
     // Load CRE tileset.
-    sm.cre_tileset = tile_table::from_bytes(&compress::decompress_lz5(
+    sm.cre_tileset = tile_table::from_bytes(&lz5_decompress(
         sm.rom.offset(
             LoRom {
                 address: CRE_TILESET,
@@ -219,7 +219,7 @@ pub fn load_unheadered_rom(filename: &str) -> Result<SuperMetroid, Box<dyn Error
 
             if let Some(state) = sm.states.get(&(state_condition.state_address as usize)) {
                 if let Entry::Vacant(entry) = sm.levels.entry(state.level_address as usize) {
-                    if let Ok(decompressed_data) = &compress::decompress_lz5(
+                    if let Ok(decompressed_data) = &lz5_decompress(
                         &sm.rom.offset(
                             LoRom {
                                 address: state.level_address as usize,
