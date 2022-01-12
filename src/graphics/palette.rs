@@ -182,9 +182,9 @@ mod tests {
     #[test]
     fn convert_palette_from_and_into_two_bytes_bgr555_format() -> Result<(), Box<dyn Error>> {
         let sub_palette: [Bgr555; COLORS_BY_SUB_PALETTE] = [Bgr555 {
-            r: 4,
-            g: 10,
-            b: 21,
+            r: 0b000_00100, // 04
+            g: 0b000_01010, // 10
+            b: 0b000_10101, // 21
             u: 0,
         }; COLORS_BY_SUB_PALETTE];
 
@@ -217,9 +217,9 @@ mod tests {
     #[test]
     fn convert_palette_from_three_bytes_bgr555_format() -> Result<(), Box<dyn Error>> {
         let sub_palette: [Bgr555; COLORS_BY_SUB_PALETTE] = [Bgr555 {
-            r: 4,
-            g: 10,
-            b: 21,
+            r: 0b000_00100, // 04
+            g: 0b000_01010, // 10
+            b: 0b000_10101, // 21
             u: 0,
         }; COLORS_BY_SUB_PALETTE];
 
@@ -257,9 +257,9 @@ mod tests {
     fn load_palette_from_two_bytes_bgr555_format_with_missing_sub_palettes(
     ) -> Result<(), Box<dyn Error>> {
         let sub_palette: [Bgr555; COLORS_BY_SUB_PALETTE] = [Bgr555 {
-            r: 4,
-            g: 10,
-            b: 21,
+            r: 0b000_00100, // 04
+            g: 0b000_01010, // 10
+            b: 0b000_10101, // 21
             u: 0,
         }; COLORS_BY_SUB_PALETTE];
 
@@ -299,6 +299,31 @@ mod tests {
             .repeat(COLORS_BY_SUB_PALETTE)
             .repeat(NUMBER_OF_SUB_PALETTES + 1);
         assert!(from_bytes(&palette_bytes).is_err());
+    }
+
+    /// Convert a palette into a linear vector of Rgb888 with it's colors, row by row.
+    #[test]
+    fn convert_palette_into_colors() {
+        let sub_palette: [Bgr555; COLORS_BY_SUB_PALETTE] = [Bgr555 {
+            r: 0b000_00100, // 04
+            g: 0b000_01010, // 10
+            b: 0b000_10101, // 21
+            u: 0,
+        }; COLORS_BY_SUB_PALETTE];
+
+        let sub_palettes: [SubPalette; NUMBER_OF_SUB_PALETTES] = [SubPalette {
+            colors: sub_palette,
+        }; NUMBER_OF_SUB_PALETTES];
+
+        let palette = Palette { sub_palettes };
+
+        let expected_colors = [Rgb888 {
+            r: 0b00100_000, // 32
+            g: 0b01010_000, // 80
+            b: 0b10101_000, // 168
+        }; NUMBER_OF_SUB_PALETTES * COLORS_BY_SUB_PALETTE];
+
+        assert_eq!(palette.to_colors(), expected_colors);
     }
 
     /// The types Bgr555 and Rgb888 should be convertable bewteen themselves.
