@@ -52,9 +52,22 @@
 			"label": "Generate lcov"
 		},
 		{
+			"command": "rm",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"args": [
+				"-rf",
+				"coverage/",
+			],
+			"group": "test",
+			"label": "Clean coverage"
+		},
+		{
 			"label": "Test with coverage",
 			"dependsOrder": "sequence",
 			"dependsOn": [
+				"Clean coverage",
 				"rust: cargo test",
 				"Generate lcov"
 			],
