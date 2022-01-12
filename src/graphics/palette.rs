@@ -4,7 +4,7 @@ use crate::ParseError;
 
 pub const NUMBER_OF_SUB_PALETTES: usize = 8;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Palette {
     pub sub_palettes: [SubPalette; NUMBER_OF_SUB_PALETTES],
 }
@@ -92,7 +92,7 @@ impl Palette {
 
 pub const COLORS_BY_SUB_PALETTE: usize = 16;
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct SubPalette {
     pub colors: [Bgr555; COLORS_BY_SUB_PALETTE],
 }
@@ -174,6 +174,34 @@ mod tests {
     use std::error::Error;
 
     use super::*;
+
+    /// Load a palette from bytes.
+    /// Convert the palette back into bytes.
+    /// Palette format: [NUMBER_OF_SUB_PALETTES * [COLORS_BY_SUB_PALETTE * [Bgr555]]]
+    #[test]
+    fn convert_palette_from_and_into_two_bytes() -> Result<(), Box<dyn Error>> {
+        let sub_palette: [Bgr555; COLORS_BY_SUB_PALETTE] = [Bgr555 {
+            r: 4,
+            g: 10,
+            b: 21,
+            u: 0,
+        }; COLORS_BY_SUB_PALETTE];
+
+        let sub_palettes: [SubPalette; NUMBER_OF_SUB_PALETTES] = [SubPalette {
+            colors: sub_palette,
+        }; NUMBER_OF_SUB_PALETTES];
+
+        let expected_palette = Palette { sub_palettes };
+        let palette_bytes = [0b010_00100, 0b0_10101_01] // Bgr555 { r: 4, g: 10, b: 21, u: 0 }
+            .repeat(COLORS_BY_SUB_PALETTE)
+            .repeat(NUMBER_OF_SUB_PALETTES);
+
+        let palette = from_bytes(&palette_bytes)?;
+        assert_eq!(palette, expected_palette);
+        assert_eq!(palette.to_bytes(), palette_bytes);
+
+        Ok(())
+    }
 
     /// The types Bgr555 and Rgb888 should be convertable bewteen themselves.
     #[test]
