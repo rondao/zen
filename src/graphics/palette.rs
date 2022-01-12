@@ -13,8 +13,8 @@ pub struct Palette {
 pub fn from_bytes(mut source: &[u8]) -> Result<Palette, ParseError> {
     let bytes_per_color = if source[..3] == *b"TPL" {
         // If bytes contain 'TPL' header, extract type.
-        let tpl_type = source[4];
-        source = &source[5..];
+        let tpl_type = source[3];
+        source = &source[4..];
 
         match tpl_type {
             0x00 => 3,
@@ -175,8 +175,9 @@ mod tests {
 
     use super::*;
 
-    /// Load a palette from bytes with bgr555 in two bytes format.
+    /// Load a palette from bytes with bgr555 format in two bytes.
     /// Convert the palette back into bytes.
+    /// Test done with headered and unheadered bytes.
     /// Palette format: [NUMBER_OF_SUB_PALETTES * [COLORS_BY_SUB_PALETTE * [Bgr555]]]
     #[test]
     fn convert_palette_from_and_into_two_bytes_bgr555_format() -> Result<(), Box<dyn Error>> {
@@ -197,6 +198,14 @@ mod tests {
             .repeat(NUMBER_OF_SUB_PALETTES);
 
         let palette = from_bytes(&palette_bytes)?;
+        assert_eq!(palette, expected_palette);
+        assert_eq!(palette.to_bytes(), palette_bytes);
+
+        let mut palette_bytes_with_header_for_two_bytes = b"TPL".to_vec(); // Header.
+        palette_bytes_with_header_for_two_bytes.push(0x02); // Two byte format.
+        palette_bytes_with_header_for_two_bytes.extend(&palette_bytes); //Data.
+
+        let palette = from_bytes(&palette_bytes_with_header_for_two_bytes)?;
         assert_eq!(palette, expected_palette);
         assert_eq!(palette.to_bytes(), palette_bytes);
 
