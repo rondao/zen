@@ -242,6 +242,15 @@ mod tests {
         Ok(())
     }
 
+    /// Fail to load a palette from incorrect headered bytes.
+    #[test]
+    fn fail_to_load_palette_from_incorrect_header() {
+        let mut palette_bytes_with_header = b"TPL".to_vec(); // Header.
+        palette_bytes_with_header.push(0x01); // Incorrect format.
+
+        assert!(from_bytes(&palette_bytes_with_header).is_err());
+    }
+
     /// Load a palette from bytes with bgr555 in two bytes format, but with missing colors.
     /// Expected to load the missing colors with default bgr555 colors.
     #[test]
