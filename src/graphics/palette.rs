@@ -175,11 +175,11 @@ mod tests {
 
     use super::*;
 
-    /// Load a palette from bytes.
+    /// Load a palette from bytes with bgr555 in two bytes format.
     /// Convert the palette back into bytes.
     /// Palette format: [NUMBER_OF_SUB_PALETTES * [COLORS_BY_SUB_PALETTE * [Bgr555]]]
     #[test]
-    fn convert_palette_from_and_into_two_bytes() -> Result<(), Box<dyn Error>> {
+    fn convert_palette_from_and_into_two_bytes_bgr555_format() -> Result<(), Box<dyn Error>> {
         let sub_palette: [Bgr555; COLORS_BY_SUB_PALETTE] = [Bgr555 {
             r: 4,
             g: 10,
@@ -199,6 +199,46 @@ mod tests {
         let palette = from_bytes(&palette_bytes)?;
         assert_eq!(palette, expected_palette);
         assert_eq!(palette.to_bytes(), palette_bytes);
+
+        Ok(())
+    }
+
+    /// Load a palette from bytes with bgr555 in two bytes format, but with missing colors.
+    /// Expected to load the missing colors with default bgr555 colors.
+    #[test]
+    fn load_palette_from_two_bytes_bgr555_format_with_missing_sub_palettes(
+    ) -> Result<(), Box<dyn Error>> {
+        let sub_palette: [Bgr555; COLORS_BY_SUB_PALETTE] = [Bgr555 {
+            r: 4,
+            g: 10,
+            b: 21,
+            u: 0,
+        }; COLORS_BY_SUB_PALETTE];
+
+        let sub_palettes: [SubPalette; NUMBER_OF_SUB_PALETTES] = [
+            SubPalette {
+                colors: sub_palette,
+            },
+            SubPalette {
+                colors: sub_palette,
+            },
+            SubPalette {
+                colors: sub_palette,
+            },
+            SubPalette::default(),
+            SubPalette::default(),
+            SubPalette::default(),
+            SubPalette::default(),
+            SubPalette::default(),
+        ];
+
+        let expected_palette = Palette { sub_palettes };
+        let palette_bytes = [0b010_00100, 0b0_10101_01] // Bgr555 { r: 4, g: 10, b: 21, u: 0 }
+            .repeat(COLORS_BY_SUB_PALETTE)
+            .repeat(3);
+
+        let palette = from_bytes(&palette_bytes)?;
+        assert_eq!(palette, expected_palette);
 
         Ok(())
     }
