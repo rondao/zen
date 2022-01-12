@@ -201,13 +201,43 @@ mod tests {
         assert_eq!(palette, expected_palette);
         assert_eq!(palette.to_bytes(), palette_bytes);
 
-        let mut palette_bytes_with_header_for_two_bytes = b"TPL".to_vec(); // Header.
-        palette_bytes_with_header_for_two_bytes.push(0x02); // Two byte format.
-        palette_bytes_with_header_for_two_bytes.extend(&palette_bytes); //Data.
+        let mut palette_bytes_with_header = b"TPL".to_vec(); // Header.
+        palette_bytes_with_header.push(0x02); // Two byte format.
+        palette_bytes_with_header.extend(&palette_bytes); //Data.
 
-        let palette = from_bytes(&palette_bytes_with_header_for_two_bytes)?;
+        let palette = from_bytes(&palette_bytes_with_header)?;
         assert_eq!(palette, expected_palette);
         assert_eq!(palette.to_bytes(), palette_bytes);
+
+        Ok(())
+    }
+
+    /// Load a palette from bytes with bgr555 format in three bytes.
+    /// Palette format: [NUMBER_OF_SUB_PALETTES * [COLORS_BY_SUB_PALETTE * [Bgr555]]]
+    #[test]
+    fn convert_palette_from_three_bytes_bgr555_format() -> Result<(), Box<dyn Error>> {
+        let sub_palette: [Bgr555; COLORS_BY_SUB_PALETTE] = [Bgr555 {
+            r: 4,
+            g: 10,
+            b: 21,
+            u: 0,
+        }; COLORS_BY_SUB_PALETTE];
+
+        let sub_palettes: [SubPalette; NUMBER_OF_SUB_PALETTES] = [SubPalette {
+            colors: sub_palette,
+        }; NUMBER_OF_SUB_PALETTES];
+
+        let expected_palette = Palette { sub_palettes };
+        let palette_bytes = [0b00100_000, 0b01010_000, 0b10101_000] // Bgr555 { r: 4, g: 10, b: 21, u: 0 }
+            .repeat(COLORS_BY_SUB_PALETTE)
+            .repeat(NUMBER_OF_SUB_PALETTES);
+
+        let mut palette_bytes_with_header = b"TPL".to_vec(); // Header.
+        palette_bytes_with_header.push(0x00); // Three byte format.
+        palette_bytes_with_header.extend(&palette_bytes); //Data.
+
+        let palette = from_bytes(&palette_bytes_with_header)?;
+        assert_eq!(palette, expected_palette);
 
         Ok(())
     }
