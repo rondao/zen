@@ -243,6 +243,16 @@ mod tests {
         Ok(())
     }
 
+    /// Load a palette from bytes with bgr555 in two bytes format, but with exceeding number of sub-palettes.
+    /// Expected to return an error.
+    #[test]
+    fn load_palette_from_two_bytes_bgr555_format_with_exceeding_sub_palettes() {
+        let palette_bytes = [0b010_00100, 0b0_10101_01] // Bgr555 { r: 4, g: 10, b: 21, u: 0 }
+            .repeat(COLORS_BY_SUB_PALETTE)
+            .repeat(NUMBER_OF_SUB_PALETTES + 1);
+        assert!(from_bytes(&palette_bytes).is_err());
+    }
+
     /// The types Bgr555 and Rgb888 should be convertable bewteen themselves.
     #[test]
     fn convert_bgr555_and_rgb888_between_themselves() {
