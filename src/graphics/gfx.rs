@@ -182,4 +182,167 @@ mod tests {
         assert_eq!(tile_gfx.flip((false, true)), colors_flipped_vertically);
         assert_eq!(tile_gfx.flip((true, true)), colors_flipped_both_axis);
     }
+
+    /// Load a Gfx composed of many TileGfx in 4bpp format.
+    #[test]
+    fn load_gfx_from_4bpp() {
+        #[rustfmt::skip]
+        let expected_gfx = Gfx { tiles: vec![
+            TileGfx { colors: [
+                0b0001, 0b0010, 0b0011, 0b0100, 0b0101, 0b0110, 0b0111, 0b1000,
+                0b0010, 0b0011, 0b0100, 0b0101, 0b0110, 0b0111, 0b1000, 0b1001,
+                0b0011, 0b0100, 0b0101, 0b0110, 0b0111, 0b1000, 0b1001, 0b1010,
+                0b0100, 0b0101, 0b0110, 0b0111, 0b1000, 0b1001, 0b1010, 0b1011,
+                0b0101, 0b0110, 0b0111, 0b1000, 0b1001, 0b1010, 0b1011, 0b1100,
+                0b0110, 0b0111, 0b1000, 0b1001, 0b1010, 0b1011, 0b1100, 0b1101,
+                0b0111, 0b1000, 0b1001, 0b1010, 0b1011, 0b1100, 0b1101, 0b1110,
+                0b1000, 0b1001, 0b1010, 0b1011, 0b1100, 0b1101, 0b1110, 0b1111,
+            ]},
+            TileGfx { colors: [
+                0b1110, 0b1101, 0b1100, 0b1011, 0b1010, 0b1001, 0b1000, 0b0111,
+                0b1101, 0b1100, 0b1011, 0b1010, 0b1001, 0b1000, 0b0111, 0b0110,
+                0b1100, 0b1011, 0b1010, 0b1001, 0b1000, 0b0111, 0b0110, 0b0101,
+                0b1011, 0b1010, 0b1001, 0b1000, 0b0111, 0b0110, 0b0101, 0b0100,
+                0b1010, 0b1001, 0b1000, 0b0111, 0b0110, 0b0101, 0b0100, 0b0011,
+                0b1001, 0b1000, 0b0111, 0b0110, 0b0101, 0b0100, 0b0011, 0b0010,
+                0b1000, 0b0111, 0b0110, 0b0101, 0b0100, 0b0011, 0b0010, 0b0001,
+                0b0111, 0b0110, 0b0101, 0b0100, 0b0011, 0b0010, 0b0001, 0b0000,
+            ]},
+        ]};
+
+        #[rustfmt::skip]
+        let gfx_in_4bpp = [
+            // TileGfx 0
+            0b1010_1010, 0b0110_0110, // Row 0 (bits 1-2)
+            0b0101_0101, 0b1100_1100, // Row 1 (bits 1-2)
+            0b1010_1010, 0b1001_1001, // Row 2 (bits 1-2)
+            0b0101_0101, 0b0011_0011, // Row 3 (bits 1-2)
+            0b1010_1010, 0b0110_0110, // Row 4 (bits 1-2)
+            0b0101_0101, 0b1100_1100, // Row 5 (bits 1-2)
+            0b1010_1010, 0b1001_1001, // Row 6 (bits 1-2)
+            0b0101_0101, 0b0011_0011, // Row 7 (bits 1-2)
+            0b0001_1110, 0b0000_0001, // Row 0 (bits 3-4)
+            0b0011_1100, 0b0000_0011, // Row 1 (bits 3-4)
+            0b0111_1000, 0b0000_0111, // Row 2 (bits 3-4)
+            0b1111_0000, 0b0000_1111, // Row 3 (bits 3-4)
+            0b1110_0001, 0b0001_1111, // Row 4 (bits 3-4)
+            0b1100_0011, 0b0011_1111, // Row 5 (bits 3-4)
+            0b1000_0111, 0b0111_1111, // Row 6 (bits 3-4)
+            0b0000_1111, 0b1111_1111, // Row 7 (bits 3-4)
+            // TileGfx 1
+            0b0101_0101, 0b1001_1001, // Row 0 (bits 1-2)
+            0b1010_1010, 0b0011_0011, // Row 1 (bits 1-2)
+            0b0101_0101, 0b0110_0110, // Row 2 (bits 1-2)
+            0b1010_1010, 0b1100_1100, // Row 3 (bits 1-2)
+            0b0101_0101, 0b1001_1001, // Row 4 (bits 1-2)
+            0b1010_1010, 0b0011_0011, // Row 5 (bits 1-2)
+            0b0101_0101, 0b0110_0110, // Row 6 (bits 1-2)
+            0b1010_1010, 0b1100_1100, // Row 7 (bits 1-2)
+            0b1110_0001, 0b1111_1110, // Row 0 (bits 3-4)
+            0b1100_0011, 0b1111_1100, // Row 1 (bits 3-4)
+            0b1000_0111, 0b1111_1000, // Row 2 (bits 3-4)
+            0b0000_1111, 0b1111_0000, // Row 3 (bits 3-4)
+            0b0001_1110, 0b1110_0000, // Row 4 (bits 3-4)
+            0b0011_1100, 0b1100_0000, // Row 5 (bits 3-4)
+            0b0111_1000, 0b1000_0000, // Row 6 (bits 3-4)
+            0b1111_0000, 0b0000_0000, // Row 7 (bits 3-4)
+        ];
+
+        assert_eq!(from_4bpp(&gfx_in_4bpp), expected_gfx);
+    }
+
+    /// Convert a Gfx into a vector with all indexed colors, row by row.
+    #[test]
+    fn convert_gfx_to_indexed_colors() {
+        #[rustfmt::skip]
+        let expected_indexed_colors = [
+            // Gfx first row of TileGfxs.
+            // Gfx row 0.
+            [[0b0001, 0b0010, 0b0011, 0b0100, 0b0101, 0b0110, 0b0111, 0b1000]; GFX_TILE_WIDTH / 2].concat(), // color          - row 0
+            [[0b1110, 0b1101, 0b1100, 0b1011, 0b1010, 0b1001, 0b1000, 0b0111]; GFX_TILE_WIDTH / 2].concat(), // inverted color - row 0
+            // Gfx row 1.
+            [[0b0010, 0b0011, 0b0100, 0b0101, 0b0110, 0b0111, 0b1000, 0b1001]; GFX_TILE_WIDTH / 2].concat(), // color          - row 1
+            [[0b1101, 0b1100, 0b1011, 0b1010, 0b1001, 0b1000, 0b0111, 0b0110]; GFX_TILE_WIDTH / 2].concat(), // inverted color - row 1
+            // Gfx row 2.
+            [[0b0011, 0b0100, 0b0101, 0b0110, 0b0111, 0b1000, 0b1001, 0b1010]; GFX_TILE_WIDTH / 2].concat(), // color          - row 2
+            [[0b1100, 0b1011, 0b1010, 0b1001, 0b1000, 0b0111, 0b0110, 0b0101]; GFX_TILE_WIDTH / 2].concat(), // inverted color - row 2
+            // Gfx row 3.
+            [[0b0100, 0b0101, 0b0110, 0b0111, 0b1000, 0b1001, 0b1010, 0b1011]; GFX_TILE_WIDTH / 2].concat(), // color          - row 3
+            [[0b1011, 0b1010, 0b1001, 0b1000, 0b0111, 0b0110, 0b0101, 0b0100]; GFX_TILE_WIDTH / 2].concat(), // inverted color - row 3
+            // Gfx row 4.
+            [[0b0101, 0b0110, 0b0111, 0b1000, 0b1001, 0b1010, 0b1011, 0b1100]; GFX_TILE_WIDTH / 2].concat(), // color          - row 4
+            [[0b1010, 0b1001, 0b1000, 0b0111, 0b0110, 0b0101, 0b0100, 0b0011]; GFX_TILE_WIDTH / 2].concat(), // inverted color - row 4
+            // Gfx row 5.
+            [[0b0110, 0b0111, 0b1000, 0b1001, 0b1010, 0b1011, 0b1100, 0b1101]; GFX_TILE_WIDTH / 2].concat(), // color          - row 5
+            [[0b1001, 0b1000, 0b0111, 0b0110, 0b0101, 0b0100, 0b0011, 0b0010]; GFX_TILE_WIDTH / 2].concat(), // inverted color - row 5
+            // Gfx row 6.
+            [[0b0111, 0b1000, 0b1001, 0b1010, 0b1011, 0b1100, 0b1101, 0b1110]; GFX_TILE_WIDTH / 2].concat(), // color          - row 6
+            [[0b1000, 0b0111, 0b0110, 0b0101, 0b0100, 0b0011, 0b0010, 0b0001]; GFX_TILE_WIDTH / 2].concat(), // inverted color - row 6
+            // Gfx row 7.
+            [[0b1000, 0b1001, 0b1010, 0b1011, 0b1100, 0b1101, 0b1110, 0b1111]; GFX_TILE_WIDTH / 2].concat(), // color          - row 7
+            [[0b0111, 0b0110, 0b0101, 0b0100, 0b0011, 0b0010, 0b0001, 0b0000]; GFX_TILE_WIDTH / 2].concat(), // inverted color - row 7
+            // Gfx second row of TileGfxs.
+            // Gfx row 0.
+            [[0b1110, 0b1101, 0b1100, 0b1011, 0b1010, 0b1001, 0b1000, 0b0111]; GFX_TILE_WIDTH / 2].concat(), // inverted color - row 0
+            [[0b0001, 0b0010, 0b0011, 0b0100, 0b0101, 0b0110, 0b0111, 0b1000]; GFX_TILE_WIDTH / 2].concat(), // color          - row 0
+            // Gfx row 1.
+            [[0b1101, 0b1100, 0b1011, 0b1010, 0b1001, 0b1000, 0b0111, 0b0110]; GFX_TILE_WIDTH / 2].concat(), // inverted color - row 1
+            [[0b0010, 0b0011, 0b0100, 0b0101, 0b0110, 0b0111, 0b1000, 0b1001]; GFX_TILE_WIDTH / 2].concat(), // color          - row 1
+            // Gfx row 2.
+            [[0b1100, 0b1011, 0b1010, 0b1001, 0b1000, 0b0111, 0b0110, 0b0101]; GFX_TILE_WIDTH / 2].concat(), // inverted color - row 2
+            [[0b0011, 0b0100, 0b0101, 0b0110, 0b0111, 0b1000, 0b1001, 0b1010]; GFX_TILE_WIDTH / 2].concat(), // color          - row 2
+            // Gfx row 3.
+            [[0b1011, 0b1010, 0b1001, 0b1000, 0b0111, 0b0110, 0b0101, 0b0100]; GFX_TILE_WIDTH / 2].concat(), // inverted color - row 3
+            [[0b0100, 0b0101, 0b0110, 0b0111, 0b1000, 0b1001, 0b1010, 0b1011]; GFX_TILE_WIDTH / 2].concat(), // color          - row 3
+            // Gfx row 4.
+            [[0b1010, 0b1001, 0b1000, 0b0111, 0b0110, 0b0101, 0b0100, 0b0011]; GFX_TILE_WIDTH / 2].concat(), // inverted color - row 4
+            [[0b0101, 0b0110, 0b0111, 0b1000, 0b1001, 0b1010, 0b1011, 0b1100]; GFX_TILE_WIDTH / 2].concat(), // color          - row 4
+            // Gfx row 5.
+            [[0b1001, 0b1000, 0b0111, 0b0110, 0b0101, 0b0100, 0b0011, 0b0010]; GFX_TILE_WIDTH / 2].concat(), // inverted color - row 5
+            [[0b0110, 0b0111, 0b1000, 0b1001, 0b1010, 0b1011, 0b1100, 0b1101]; GFX_TILE_WIDTH / 2].concat(), // color          - row 5
+            // Gfx row 6.
+            [[0b1000, 0b0111, 0b0110, 0b0101, 0b0100, 0b0011, 0b0010, 0b0001]; GFX_TILE_WIDTH / 2].concat(), // inverted color - row 6
+            [[0b0111, 0b1000, 0b1001, 0b1010, 0b1011, 0b1100, 0b1101, 0b1110]; GFX_TILE_WIDTH / 2].concat(), // color          - row 6
+            // Gfx row 7.
+            [[0b0111, 0b0110, 0b0101, 0b0100, 0b0011, 0b0010, 0b0001, 0b0000]; GFX_TILE_WIDTH / 2].concat(), // inverted color - row 7
+            [[0b1000, 0b1001, 0b1010, 0b1011, 0b1100, 0b1101, 0b1110, 0b1111]; GFX_TILE_WIDTH / 2].concat(), // color          - row 7
+        ]
+        .concat();
+
+        #[rustfmt::skip]
+        let half_size_tile_gfx = vec![TileGfx { colors: [
+            0b0001, 0b0010, 0b0011, 0b0100, 0b0101, 0b0110, 0b0111, 0b1000,
+            0b0010, 0b0011, 0b0100, 0b0101, 0b0110, 0b0111, 0b1000, 0b1001,
+            0b0011, 0b0100, 0b0101, 0b0110, 0b0111, 0b1000, 0b1001, 0b1010,
+            0b0100, 0b0101, 0b0110, 0b0111, 0b1000, 0b1001, 0b1010, 0b1011,
+            0b0101, 0b0110, 0b0111, 0b1000, 0b1001, 0b1010, 0b1011, 0b1100,
+            0b0110, 0b0111, 0b1000, 0b1001, 0b1010, 0b1011, 0b1100, 0b1101,
+            0b0111, 0b1000, 0b1001, 0b1010, 0b1011, 0b1100, 0b1101, 0b1110,
+            0b1000, 0b1001, 0b1010, 0b1011, 0b1100, 0b1101, 0b1110, 0b1111,
+        ]}; GFX_TILE_WIDTH / 2];
+
+        #[rustfmt::skip]
+        let half_size_inverted_tile_gfx = vec![TileGfx { colors: [
+            0b1110, 0b1101, 0b1100, 0b1011, 0b1010, 0b1001, 0b1000, 0b0111,
+            0b1101, 0b1100, 0b1011, 0b1010, 0b1001, 0b1000, 0b0111, 0b0110,
+            0b1100, 0b1011, 0b1010, 0b1001, 0b1000, 0b0111, 0b0110, 0b0101,
+            0b1011, 0b1010, 0b1001, 0b1000, 0b0111, 0b0110, 0b0101, 0b0100,
+            0b1010, 0b1001, 0b1000, 0b0111, 0b0110, 0b0101, 0b0100, 0b0011,
+            0b1001, 0b1000, 0b0111, 0b0110, 0b0101, 0b0100, 0b0011, 0b0010,
+            0b1000, 0b0111, 0b0110, 0b0101, 0b0100, 0b0011, 0b0010, 0b0001,
+            0b0111, 0b0110, 0b0101, 0b0100, 0b0011, 0b0010, 0b0001, 0b0000,
+        ]}; GFX_TILE_WIDTH / 2];
+
+        let gfx = Gfx {
+            tiles: [
+                half_size_tile_gfx.clone(),
+                half_size_inverted_tile_gfx.clone(),
+                half_size_inverted_tile_gfx.clone(),
+                half_size_tile_gfx.clone(),
+            ]
+            .concat(),
+        };
+
+        assert_eq!(gfx.to_indexed_colors(), expected_indexed_colors);
+    }
 }
