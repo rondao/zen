@@ -3,12 +3,12 @@ use std::convert::TryInto;
 pub const TILE_SIZE: usize = 8;
 pub const GFX_TILE_WIDTH: usize = 16;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct Gfx {
     pub tiles: Vec<TileGfx>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TileGfx {
     pub colors: [u8; TILE_SIZE * TILE_SIZE],
 }
@@ -28,7 +28,7 @@ impl TileGfx {
         // Second half's first and second byte has 2 and 3 bits respectively.
         for (pixel_01, pixel_23) in bitplane_01.chunks(2).zip(bitplane_23.chunks(2)) {
             // Each 'i' bit of the 4 bytes collected at each iteration composes one color.
-            //  [bp1, bp2, bp3, bp4, bp5, bp6, bp7, bp8]
+            //  [bp1, bp2, bp3, bp4]
             for i in (0..TILE_SIZE).rev() {
                 colors.push(
                     (((pixel_01[0] >> i) & 1) << 0)
@@ -81,5 +81,48 @@ impl Gfx {
             }
         }
         gfx_index_colors
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Load a single 8x8 tile from bytes with 4 bits per plane.
+    #[test]
+    fn load_tile_gfx_from_4bpp() {
+        #[rustfmt::skip]
+        let expected_tile_gfx = TileGfx { colors: [
+            0b0001, 0b0010, 0b0011, 0b0100, 0b0101, 0b0110, 0b0111, 0b1000,
+            0b0010, 0b0011, 0b0100, 0b0101, 0b0110, 0b0111, 0b1000, 0b1001,
+            0b0011, 0b0100, 0b0101, 0b0110, 0b0111, 0b1000, 0b1001, 0b1010,
+            0b0100, 0b0101, 0b0110, 0b0111, 0b1000, 0b1001, 0b1010, 0b1011,
+            0b0101, 0b0110, 0b0111, 0b1000, 0b1001, 0b1010, 0b1011, 0b1100,
+            0b0110, 0b0111, 0b1000, 0b1001, 0b1010, 0b1011, 0b1100, 0b1101,
+            0b0111, 0b1000, 0b1001, 0b1010, 0b1011, 0b1100, 0b1101, 0b1110,
+            0b1000, 0b1001, 0b1010, 0b1011, 0b1100, 0b1101, 0b1110, 0b1111,
+        ] };
+
+        #[rustfmt::skip]
+        let tile_gfx_in_4bpp = [
+            0b1010_1010, 0b0110_0110, // Row 0 (bits 1-2)
+            0b0101_0101, 0b1100_1100, // Row 1 (bits 1-2)
+            0b1010_1010, 0b1001_1001, // Row 2 (bits 1-2)
+            0b0101_0101, 0b0011_0011, // Row 3 (bits 1-2)
+            0b1010_1010, 0b0110_0110, // Row 4 (bits 1-2)
+            0b0101_0101, 0b1100_1100, // Row 5 (bits 1-2)
+            0b1010_1010, 0b1001_1001, // Row 6 (bits 1-2)
+            0b0101_0101, 0b0011_0011, // Row 7 (bits 1-2)
+            0b0001_1110, 0b0000_0001, // Row 0 (bits 3-4)
+            0b0011_1100, 0b0000_0011, // Row 1 (bits 3-4)
+            0b0111_1000, 0b0000_0111, // Row 2 (bits 3-4)
+            0b1111_0000, 0b0000_1111, // Row 3 (bits 3-4)
+            0b1110_0001, 0b0001_1111, // Row 4 (bits 3-4)
+            0b1100_0011, 0b0011_1111, // Row 5 (bits 3-4)
+            0b1000_0111, 0b0111_1111, // Row 6 (bits 3-4)
+            0b0000_1111, 0b1111_1111, // Row 7 (bits 3-4)
+        ];
+
+        assert_eq!(TileGfx::tile_4bpp(&tile_gfx_in_4bpp), expected_tile_gfx);
     }
 }
