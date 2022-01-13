@@ -51,7 +51,7 @@ pub fn decompress(source: &[u8]) -> Result<Vec<u8>, Lz5Error> {
                 number_of_bytes,
                 (command & 0b0010_0000) == 0b0010_0000,
             )?,
-            _ => return Err(Lz5Error),
+            _ => return Err(Lz5Error), // Can't happen. All possible values for 0bXXX0_0000 covered.
         };
 
         output.extend(decompressed_data);
@@ -151,5 +151,40 @@ fn copy_dictionary(offseted_output: &[u8], number_of_bytes: usize, invert: bool)
         decompressed_data.map(|value| !value).collect()
     } else {
         decompressed_data.collect()
+    }
+}
+
+mod tests {
+    use super::*;
+
+    /// Test the Lz5 decompression.
+    #[test]
+    fn decompress_files_with_lz5() {
+        let test_dir = "/home/rondao/dev/snes_data/test";
+        let test_cases = [
+            "BAC629.gfx",
+            "BEE78D.gfx",
+            "C1B6F6.ttb",
+            "C2AD7C.tpl",
+            "C2B5E4.tpl",
+            "C2C2BB.lvl",
+            "C2855F.ttb",
+            "CC82A8.lvl",
+        ];
+
+        for filename in test_cases {
+            let decompressed_data =
+                decompress(&std::fs::read(format!("{}/{}.bin", test_dir, filename)).unwrap())
+                    .unwrap();
+            let expected_data = std::fs::read(format!("{}/{}", test_dir, filename)).unwrap();
+            assert_eq!(decompressed_data, expected_data);
+        }
+    }
+
+    /// Decompress a offset dictionary command,
+    /// but with an offset exceeding the current decompressed data size.
+    #[test]
+    fn decompress_using_offset_dictionary_command_with_exceeding_size() {
+        assert!(decompress(&[0x80, 0xFF, 0xFF]).is_err());
     }
 }
