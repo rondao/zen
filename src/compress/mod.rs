@@ -23,8 +23,6 @@ impl fmt::Debug for Lz5Error {
 }
 
 mod tests {
-    use super::*;
-
     /// Test the Lz5 decompression.
     #[test]
     fn decompress_files_with_lz5() {
@@ -41,9 +39,10 @@ mod tests {
         ];
 
         for filename in test_cases {
-            let decompressed_data =
-                lz5_decompress(&std::fs::read(format!("{}/{}.bin", test_dir, filename)).unwrap())
-                    .unwrap();
+            let decompressed_data = super::lz5_decompress(
+                &std::fs::read(format!("{}/{}.bin", test_dir, filename)).unwrap(),
+            )
+            .unwrap();
             let expected_data = std::fs::read(format!("{}/{}", test_dir, filename)).unwrap();
             assert_eq!(decompressed_data, expected_data);
         }
@@ -68,8 +67,8 @@ mod tests {
         for filename in test_cases {
             let data = std::fs::read(format!("{}/{}", test_dir, filename)).unwrap();
 
-            let compressed_data = lz5_compress(&data);
-            let decompressed_data = lz5_decompress(&compressed_data).unwrap();
+            let compressed_data = super::lz5_compress(&data);
+            let decompressed_data = super::lz5_decompress(&compressed_data).unwrap();
 
             assert_eq!(decompressed_data, data);
         }

@@ -8,10 +8,6 @@
 			"problemMatcher": [
 				"$rustc"
 			],
-			"env": {
-				"RUSTFLAGS": "-Zinstrument-coverage",
-				"LLVM_PROFILE_FILE": "coverage/zen-%p-%m.profraw"
-			},
 			"group": {
 				"kind": "build",
 				"isDefault": true

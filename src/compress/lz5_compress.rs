@@ -215,14 +215,14 @@ fn compress_offset_dictionary(
     window_offset: usize,
     window_size: usize,
 ) -> (Vec<u8>, usize) {
-    if window_size <= 0xFF {
+    if (source_address - window_offset) <= 0xFF {
         let (mut compression, bytes) = create_command_data(0xC0, window_size);
         compression.push((source_address - window_offset) as u8);
         (compression, bytes)
     } else {
         let (mut compression, bytes) = create_command_data(0x80, window_size);
-        compression.push((window_offset & 0x1111_1111_0000_0000 >> 8) as u8);
-        compression.push((window_offset & 0x0000_0000_1111_1111) as u8);
+        compression.push((window_offset & 0b0000_0000_1111_1111) as u8);
+        compression.push(((window_offset & 0b1111_1111_0000_0000) >> 8) as u8);
         (compression, bytes)
     }
 }
