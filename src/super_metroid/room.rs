@@ -136,8 +136,47 @@ mod tests {
         ];
 
         assert_eq!(
-            state_conditions_from_bytes(0x10, &data),
+            state_conditions_from_bytes(16, &data),
             expected_state_conditions
         );
+    }
+
+    /// Load a Room from bytes.
+    #[test]
+    fn load_room_from_bytes() {
+        let data = [
+            0x12, // index
+            0x34, // area
+            0x56, // map position.0
+            0x78, // map position.1
+            0x9A, // width
+            0xBC, // height
+            0xDE, // up_scroller
+            0xED, // down_scroller
+            0xFF, // cre_bits
+            0x34, 0x12, // doors
+            0xE6, 0xE5, // state condition terminator
+        ];
+
+        #[rustfmt::skip]
+        let expected_room = Room {
+            index:         0x12,
+            area:          0x34,
+            map_position: (0x56, 0x78),
+            width:         0x9A,
+            height:        0xBC,
+            up_scroller:   0xDE,
+            down_scroller: 0xED,
+            cre_bitset:    0xFF,
+            doors:         0x1234,
+            state_conditions: vec![StateCondition{
+                                        condition: 0xE5E6,
+                                        parameter: None,
+                                        state_address: 20
+                                    }
+                                ],
+        };
+
+        assert_eq!(from_bytes(7, &data), expected_room);
     }
 }
