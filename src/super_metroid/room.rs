@@ -1,5 +1,5 @@
 /// Room format reference: https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#room_header
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct Room {
     pub index: u8,
     pub area: u8,
@@ -32,7 +32,7 @@ pub fn from_bytes(room_address: u16, source: &[u8]) -> Room {
 }
 
 /// Room format reference: https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#room_header
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct StateCondition {
     pub condition: u16,
     pub parameter: Option<u16>,
@@ -63,29 +63,81 @@ fn state_conditions_from_bytes(default_state_address: u16, source: &[u8]) -> Vec
         }
         // One byte parameter.
         0xE612 | 0xE629 => {
-            let mut states = Vec::from([StateCondition {
+            let mut states = state_conditions_from_bytes(default_state_address + 5, &source[5..]);
+            states.push(StateCondition {
                 condition,
                 parameter: Some(source[2] as u16),
                 state_address: u16::from_le_bytes([source[3], source[4]]),
-            }]);
-            states.append(&mut state_conditions_from_bytes(
-                default_state_address + 5,
-                &source[5..],
-            ));
+            });
             return states;
         }
         // No parameter.
         _ => {
-            let mut states = Vec::from([StateCondition {
+            let mut states = state_conditions_from_bytes(default_state_address + 4, &source[4..]);
+            states.push(StateCondition {
                 condition,
                 parameter: None,
                 state_address: u16::from_le_bytes([source[2], source[3]]),
-            }]);
-            states.append(&mut state_conditions_from_bytes(
-                default_state_address + 4,
-                &source[4..],
-            ));
+            });
             return states;
         }
     };
+}
+
+mod tests {
+    use super::*;
+
+    /// Load a State Condition from bytes.
+    #[test]
+    fn load_state_condition_from_bytes() {
+        #[rustfmt::skip]
+        let data = [
+            0xCB, 0xED, // State Condition
+            0xBB, 0xAA, // State Address
+            0x29, 0xE6, // State Condition
+            0xF0,       // Parameter (One Byte)
+            0x77, 0x66, // State Address
+            0x12, 0xE6, // State Condition
+            0x42,       // Parameter (One Byte)
+            0x55, 0x44, // State Address
+            0xEB, 0xE5, // State Condition
+            0xCD, 0xAB, // Parameter (Two Byte)
+            0x33, 0x22, // State Address
+            0xE6, 0xE5, // State Condition (Terminator)
+            0x86,       // State Address
+        ];
+
+        let expected_state_conditions = vec![
+            StateCondition {
+                condition: 0xE5E6,
+                parameter: None,
+                state_address: 38,
+            },
+            StateCondition {
+                condition: 0xE5EB,
+                parameter: Some(0xABCD),
+                state_address: 0x2233,
+            },
+            StateCondition {
+                condition: 0xE612,
+                parameter: Some(0x42),
+                state_address: 0x4455,
+            },
+            StateCondition {
+                condition: 0xE629,
+                parameter: Some(0xF0),
+                state_address: 0x6677,
+            },
+            StateCondition {
+                condition: 0xEDCB,
+                parameter: None,
+                state_address: 0xAABB,
+            },
+        ];
+
+        assert_eq!(
+            state_conditions_from_bytes(0x10, &data),
+            expected_state_conditions
+        );
+    }
 }
