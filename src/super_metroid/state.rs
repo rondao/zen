@@ -1,5 +1,5 @@
 //https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#state_header
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct State {
     pub level_address: u32, // Only three bytes are used (u24).
     pub tileset: u8,
@@ -36,5 +36,52 @@ pub fn load_bytes(source: &[u8]) -> State {
         plm_population:       u16::from_le_bytes([source[20], source[21]]),
         library_background:   u16::from_le_bytes([source[22], source[23]]),
         setup_asm:            u16::from_le_bytes([source[24], source[25]]),
+    }
+}
+
+mod tests {
+    use super::*;
+
+    /// Load a State from bytes.
+    #[test]
+    fn load_state_from_bytes() {
+        #[rustfmt::skip]
+        let data = [
+            0x56, 0x34, 0x12, // level_address
+            0xA2,             // tileset
+            0x9D,             // music_data_index
+            0x38,             // music_track
+            0x34, 0x12,       // fx
+            0x78, 0x56,       // enemy_population
+            0xBC, 0x9A,       // enemy_set
+            0x00,             // layer_2_x_scroll
+            0xFF,             // layer_2_y_scroll
+            0x23, 0x01,       // scroll
+            0x67, 0x45,       // special_x_ray_blocks
+            0xAB, 0x89,       // main_asm
+            0xEF, 0xCD,       // plm_population
+            0x77, 0x66,       // library_background
+            0xBB, 0xAA,       // setup_asm
+        ];
+
+        let expected_state = State {
+            level_address: 0x123456,
+            tileset: 0xA2,
+            music_data_index: 0x9D,
+            music_track: 0x38,
+            fx: 0x1234,
+            enemy_population: 0x5678,
+            enemy_set: 0x9ABC,
+            layer_2_x_scroll: 0x00,
+            layer_2_y_scroll: 0xFF,
+            scroll: 0x0123,
+            special_x_ray_blocks: 0x4567,
+            main_asm: 0x89AB,
+            plm_population: 0xCDEF,
+            library_background: 0x6677,
+            setup_asm: 0xAABB,
+        };
+
+        assert_eq!(load_bytes(&data), expected_state);
     }
 }
