@@ -34,6 +34,7 @@ pub fn from_bytes(source: &[u8]) -> TileTable {
         .collect()
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
 

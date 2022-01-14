@@ -39,6 +39,7 @@ pub fn load_bytes(source: &[u8]) -> State {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
 

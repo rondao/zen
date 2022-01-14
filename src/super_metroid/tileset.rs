@@ -76,6 +76,7 @@ pub fn tileset_to_colors(tile_table: &TileTable, palette: &Palette, graphics: &G
     colors
 }
 
+#[cfg(test)]
 mod tests {
     use std::convert::TryInto;
 

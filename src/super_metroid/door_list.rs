@@ -19,6 +19,7 @@ pub fn load_bytes(number_of_doors: usize, source: &[u8]) -> DoorList {
 //     number_of_doors as usize
 // }
 
+#[cfg(test)]
 mod tests {
     use super::*;
 

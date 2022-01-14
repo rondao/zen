@@ -84,6 +84,7 @@ fn state_conditions_from_bytes(default_state_address: u16, source: &[u8]) -> Vec
     };
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
 

@@ -154,6 +154,7 @@ fn copy_dictionary(offseted_output: &[u8], number_of_bytes: usize, invert: bool)
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
 

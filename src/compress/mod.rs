@@ -22,6 +22,7 @@ impl fmt::Debug for Lz5Error {
     }
 }
 
+#[cfg(test)]
 mod tests {
     /// Test the Lz5 compression.
     /// Certify that we can obtain the same data by decompressing it.
