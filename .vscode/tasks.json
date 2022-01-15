@@ -48,6 +48,27 @@
 			"label": "Generate lcov"
 		},
 		{
+			"command": "grcov",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"args": [
+				"coverage/",
+				"--binary-path",
+				"./target/debug/",
+				"-s",
+				".",
+				"-t",
+				"html",
+				"--branch",
+				"--ignore-not-existing",
+				"-o",
+				"./coverage/"
+			],
+			"group": "test",
+			"label": "Generate html coverage"
+		},
+		{
 			"command": "rm",
 			"problemMatcher": [
 				"$rustc"
@@ -65,7 +86,8 @@
 			"dependsOn": [
 				"Clean coverage",
 				"rust: cargo test",
-				"Generate lcov"
+				"Generate lcov",
+				"Generate html coverage"
 			],
 			"problemMatcher": []
 		}
