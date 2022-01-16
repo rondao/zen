@@ -270,4 +270,16 @@ mod tests {
         assert!(level_result.is_ok());
         assert_eq!(level_result.unwrap(), expected_level_data);
     }
+
+    /// Load a level with incorrect data size
+    #[test]
+    fn load_level_data_with_incorrect_data_size() {
+        let data_empty: &[u8] = &[];
+        let data_without_minimal_size: &[u8] = &[0xFF];
+        let data_with_incorrect_size_header: &[u8] = &[0x02, 0x00];
+
+        assert!(load_from_bytes(data_empty, false).is_err());
+        assert!(load_from_bytes(data_without_minimal_size, false).is_err());
+        assert!(load_from_bytes(data_with_incorrect_size_header, false).is_err());
+    }
 }
