@@ -267,7 +267,17 @@ mod tests {
     #[test]
     fn load_super_metroid_data_from_rom() {
         assert!(
-            load_unheadered_rom("/home/rondao/dev/snes_data/Super Metroid (JU) [!].smc").is_ok()
+            load_unheadered_rom("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc")
+                .is_ok()
+        );
+    }
+
+    /// Fail to load Super Metroid data from incorrect rom data.
+    #[test]
+    fn load_super_metroid_data_from_incorrect_rom() {
+        assert!(
+            load_unheadered_rom("/home/rondao/dev/snes_data/test/Incorrect Super Metroid.smc")
+                .is_err()
         );
     }
 
