@@ -10,7 +10,7 @@ use crate::{
 
 use super::tile_table::{TileTable, BLOCK_SIZE, TILES_BY_BLOCK};
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Block {
     pub block_type: u8,
     pub y_flip: bool,
@@ -22,7 +22,7 @@ type BtsBlock = u8;
 
 pub const BLOCKS_PER_SCREEN: usize = 16;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct LevelData {
     pub layer1: Vec<Block>,
     pub bts: Vec<BtsBlock>,
@@ -158,5 +158,116 @@ impl LevelData {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Load one level layer from bytes.
+    #[test]
+    fn load_one_level_layer_from_bytes() {
+        let expected_blocks = vec![
+            Block {
+                block_type: 0b0000,
+                y_flip: false,
+                x_flip: false,
+                block_number: 0b00_0000_0000,
+            },
+            Block {
+                block_type: 0b0101,
+                y_flip: true,
+                x_flip: false,
+                block_number: 0b01_0101_0101,
+            },
+            Block {
+                block_type: 0b1010,
+                y_flip: false,
+                x_flip: true,
+                block_number: 0b10_1010_1010,
+            },
+            Block {
+                block_type: 0b1111,
+                y_flip: true,
+                x_flip: true,
+                block_number: 0b11_1111_1111,
+            },
+        ];
+
+        #[rustfmt::skip]
+        let data = [
+            0b00000000, 0b0000_0_0_00,
+            0b01010101, 0b0101_1_0_01,
+            0b10101010, 0b1010_0_1_10,
+            0b11111111, 0b1111_1_1_11,
+        ];
+
+        assert_eq!(layer_from_bytes(&data), expected_blocks);
+    }
+
+    /// Load a full level data from bytes.
+    /// Test level data with one and two layers.
+    #[test]
+    fn load_level_data_from_bytes() {
+        let mut expected_level_data = LevelData {
+            layer1: vec![
+                Block {
+                    block_type: 0b0000,
+                    y_flip: false,
+                    x_flip: false,
+                    block_number: 0b00_0000_0000,
+                },
+                Block {
+                    block_type: 0b1111,
+                    y_flip: true,
+                    x_flip: true,
+                    block_number: 0b11_1111_1111,
+                },
+            ],
+            bts: vec![0b1010_1010, 0b0101_0101],
+            layer2: None,
+        };
+
+        #[rustfmt::skip]
+        let data_one_layer = vec![
+            0b0000_0100, 0b0000_0000,  // Layer size in bytes. So 4, for 2 blocks.
+            0b00000000, 0b0000_0_0_00, // Layer_1 block 01
+            0b11111111, 0b1111_1_1_11, // Layer_1 block 02
+            0b1010_1010, // Bts block 01
+            0b0101_0101, // Bts block 02
+        ];
+
+        let level_result = load_from_bytes(&data_one_layer, false);
+        assert!(level_result.is_ok());
+        assert_eq!(level_result.unwrap(), expected_level_data);
+
+        // Add a layer 2 for another test.
+        expected_level_data.layer2 = Some(vec![
+            Block {
+                block_type: 0b0101,
+                y_flip: true,
+                x_flip: false,
+                block_number: 0b01_0101_0101,
+            },
+            Block {
+                block_type: 0b1010,
+                y_flip: false,
+                x_flip: true,
+                block_number: 0b10_1010_1010,
+            },
+        ]);
+
+        #[rustfmt::skip]
+        let data_two_layer = [
+            data_one_layer,
+            vec![0b01010101, 0b0101_1_0_01,
+                 0b10101010, 0b1010_0_1_10,],
+        ]
+        .concat();
+
+        let level_result = load_from_bytes(&data_two_layer, true);
+        assert!(level_result.is_ok());
+        assert_eq!(level_result.unwrap(), expected_level_data);
     }
 }
