@@ -1,20 +1,30 @@
+use std::collections::HashMap;
+
 use zen::{
     image::tileset_to_image,
     super_metroid::{self, address::ROOMS},
 };
 
-/// Convert Palettes to image.
+/// Convert Palettes to image after saving palettes to rom.
 #[test]
 fn convert_super_metroid_palettes_to_image() {
-    let sm = super_metroid::load_unheadered_rom(
+    let mut sm = super_metroid::load_unheadered_rom(
         "/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc",
     )
     .unwrap();
 
-    for (address, palette) in sm.palettes.iter() {
-        let expected_image =
-            image::open(format!("/home/rondao/dev/snes_data/test/{:x}.png", address)).unwrap();
-        assert_eq!(&palette.to_image(), expected_image.as_rgb8().unwrap());
+    let remapped_palettes = sm.save_palettes_to_rom();
+
+    for (old_address, new_address) in remapped_palettes {
+        let expected_image = image::open(format!(
+            "/home/rondao/dev/snes_data/test/{:x}.png",
+            old_address
+        ))
+        .unwrap();
+        assert_eq!(
+            &sm.palettes[&new_address].to_image(),
+            expected_image.as_rgb8().unwrap()
+        );
     }
 }
 
