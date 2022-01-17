@@ -261,7 +261,7 @@ impl Offset for Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{tile_table::Tile, *};
 
     /// Load Super Metroid data from rom.
     #[test]
@@ -354,5 +354,84 @@ mod tests {
         };
 
         assert_eq!(sm.gfx_with_cre(0xFF), expected_gfx_with_cre);
+    }
+
+    /// Get a Tiletable with CRE.
+    #[test]
+    fn get_tile_table_with_cre() {
+        let mut tile_tables = HashMap::new();
+        tile_tables.insert(
+            0xFF,
+            vec![
+                Tile {
+                    y_flip: false,
+                    x_flip: false,
+                    unknown: false,
+                    sub_palette: 0,
+                    gfx_index: 0,
+                },
+                Tile {
+                    y_flip: false,
+                    x_flip: true,
+                    unknown: false,
+                    sub_palette: 0b101,
+                    gfx_index: 0b01_1010_0101,
+                },
+            ],
+        );
+
+        let sm = SuperMetroid {
+            cre_tileset: vec![
+                Tile {
+                    y_flip: true,
+                    x_flip: false,
+                    unknown: true,
+                    sub_palette: 0b010,
+                    gfx_index: 0b10_0101_1010,
+                },
+                Tile {
+                    y_flip: true,
+                    x_flip: true,
+                    unknown: true,
+                    sub_palette: 0b111,
+                    gfx_index: 0b11_1111_1111,
+                },
+            ],
+            tile_tables,
+            ..Default::default()
+        };
+
+        let expected_tile_table_with_cre = vec![
+            Tile {
+                y_flip: true,
+                x_flip: false,
+                unknown: true,
+                sub_palette: 0b010,
+                gfx_index: 0b10_0101_1010,
+            },
+            Tile {
+                y_flip: true,
+                x_flip: true,
+                unknown: true,
+                sub_palette: 0b111,
+                gfx_index: 0b11_1111_1111,
+            },
+            Tile {
+                y_flip: false,
+                x_flip: false,
+                unknown: false,
+                sub_palette: 0,
+                gfx_index: 0,
+            },
+            Tile {
+                y_flip: false,
+                x_flip: true,
+                unknown: false,
+                sub_palette: 0b101,
+                gfx_index: 0b01_1010_0101,
+            },
+        ];
+
+        assert_eq!(sm.tile_table_with_cre(0xFF), expected_tile_table_with_cre);
     }
 }
