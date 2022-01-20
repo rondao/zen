@@ -126,9 +126,9 @@ impl SuperMetroid {
     }
 }
 
-pub fn load_unheadered_rom(filename: &str) -> Result<SuperMetroid, Box<dyn Error>> {
+pub fn load_unheadered_rom(data: Vec<u8>) -> Result<SuperMetroid, Box<dyn Error>> {
     let mut sm = SuperMetroid {
-        rom: fs::read(filename)?,
+        rom: data,
         ..Default::default()
     };
 
@@ -279,19 +279,19 @@ mod tests {
     /// Load Super Metroid data from rom.
     #[test]
     fn load_super_metroid_data_from_rom() {
-        assert!(
-            load_unheadered_rom("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc")
-                .is_ok()
-        );
+        assert!(load_unheadered_rom(
+            fs::read("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc").unwrap()
+        )
+        .is_ok());
     }
 
     /// Fail to load Super Metroid data from incorrect rom data.
     #[test]
     fn load_super_metroid_data_from_incorrect_rom() {
-        assert!(
-            load_unheadered_rom("/home/rondao/dev/snes_data/test/Incorrect Super Metroid.smc")
-                .is_err()
-        );
+        assert!(load_unheadered_rom(
+            fs::read("/home/rondao/dev/snes_data/test/Incorrect Super Metroid.smc").unwrap()
+        )
+        .is_err());
     }
 
     /// Get a Gfx with CRE.

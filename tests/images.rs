@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::fs;
 
 use zen::{
     image::tileset_to_image,
@@ -9,7 +9,7 @@ use zen::{
 #[test]
 fn convert_super_metroid_palettes_to_image() {
     let mut sm = super_metroid::load_unheadered_rom(
-        "/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc",
+        fs::read("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc").unwrap(),
     )
     .unwrap();
 
@@ -32,7 +32,7 @@ fn convert_super_metroid_palettes_to_image() {
 #[test]
 fn convert_super_metroid_gfxs_to_image() {
     let sm = super_metroid::load_unheadered_rom(
-        "/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc",
+        fs::read("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc").unwrap(),
     )
     .unwrap();
 
@@ -54,14 +54,14 @@ fn convert_super_metroid_gfxs_to_image() {
 #[test]
 fn convert_super_metroid_tilesets_to_image() {
     let sm = super_metroid::load_unheadered_rom(
-        "/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc",
+        fs::read("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc").unwrap(),
     )
     .unwrap();
 
     for (i, tileset) in sm.tilesets.iter().enumerate() {
         let expected_image =
             image::open(format!("/home/rondao/dev/snes_data/test/tileset_{}.png", i)).unwrap();
-        let image = if tileset.use_cre {
+        if tileset.use_cre {
             assert_eq!(
                 &tileset_to_image(
                     &sm.tile_table_with_cre(tileset.tile_table as usize),
@@ -87,7 +87,7 @@ fn convert_super_metroid_tilesets_to_image() {
 #[test]
 fn convert_super_metroid_rooms_to_image() {
     let sm = super_metroid::load_unheadered_rom(
-        "/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc",
+        fs::read("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc").unwrap(),
     )
     .unwrap();
 
