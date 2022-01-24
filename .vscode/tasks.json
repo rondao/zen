@@ -2,7 +2,6 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "rust: cargo run",
 			"type": "cargo",
 			"command": "run",
 			"problemMatcher": [
@@ -11,7 +10,8 @@
 			"group": {
 				"kind": "build",
 				"isDefault": true
-			}
+			},
+			"label": "rust: cargo run",
 		},
 		{
 			"type": "cargo",
@@ -28,9 +28,7 @@
 		},
 		{
 			"command": "grcov",
-			"problemMatcher": [
-				"$rustc"
-			],
+			"problemMatcher": [],
 			"args": [
 				"coverage/",
 				"--binary-path",
@@ -45,13 +43,11 @@
 				"./lcov.info"
 			],
 			"group": "test",
-			"label": "Generate lcov"
+			"label": "generate lcov"
 		},
 		{
 			"command": "grcov",
-			"problemMatcher": [
-				"$rustc"
-			],
+			"problemMatcher": [],
 			"args": [
 				"coverage/",
 				"--binary-path",
@@ -66,30 +62,28 @@
 				"./coverage/"
 			],
 			"group": "test",
-			"label": "Generate html coverage"
+			"label": "generate html coverage"
 		},
 		{
 			"command": "rm",
-			"problemMatcher": [
-				"$rustc"
-			],
+			"problemMatcher": [],
 			"args": [
 				"-rf",
 				"coverage/",
 			],
 			"group": "test",
-			"label": "Clean coverage"
+			"label": "clean coverage"
 		},
 		{
-			"label": "Test with coverage",
 			"dependsOrder": "sequence",
 			"dependsOn": [
-				"Clean coverage",
+				"clean coverage",
 				"rust: cargo test",
-				"Generate lcov",
-				"Generate html coverage"
+				"generate lcov",
+				"generate html coverage"
 			],
-			"problemMatcher": []
+			"problemMatcher": [],
+			"label": "rust: cargo test (coverage)",
 		}
 	]
 }
