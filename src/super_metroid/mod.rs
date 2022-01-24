@@ -67,8 +67,8 @@ impl SuperMetroid {
         [&self.cre_tileset[..], &self.tile_tables[&tileset]].concat()
     }
 
-    pub fn save_to_rom(&mut self) {
-        self.save_palettes_to_rom();
+    pub fn save_to_rom(&mut self) -> HashMap<usize, usize> {
+        let remapped_address = self.save_palettes_to_rom();
 
         // Write tilesets to ROM.
         let tileset_address: Pc = LoRom { address: TILESETS }.into();
@@ -80,6 +80,8 @@ impl SuperMetroid {
             tileset_address.address..tileset_address.address + tilesets_as_bytes.len(),
             tilesets_as_bytes,
         );
+
+        remapped_address
     }
 
     pub fn save_to_file(&mut self, filename: &str) -> std::io::Result<()> {
