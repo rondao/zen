@@ -82,6 +82,13 @@ impl Gfx {
         }
         gfx_index_colors
     }
+
+    pub fn size(&self) -> [usize; 2] {
+        [
+            (GFX_TILE_WIDTH * TILE_SIZE),
+            (self.tiles.len() * TILE_SIZE / GFX_TILE_WIDTH),
+        ]
+    }
 }
 
 #[cfg(test)]
