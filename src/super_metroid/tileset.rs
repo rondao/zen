@@ -51,7 +51,7 @@ pub fn tileset_to_colors(tile_table: &TileTable, palette: &Palette, graphics: &G
         // Each block has two rows of tiles. Let's add colors for the top row of tiles, and then the bottow row.
         for tile_row in 0..=1 {
             // Each tile have 'TILE_SIZE' rows of colors. Let's add all colors of each row at a time.
-            for tile_color_row in (0..TILE_SIZE).map(|value| value * TILE_SIZE) {
+            for tile_color_row in (0..TILE_SIZE * TILE_SIZE).step_by(TILE_SIZE) {
                 // Let's loop the top and bottom row of tiles for each row of blocks.
                 for row_of_tiles in row_of_blocks.chunks(2).skip(tile_row).step_by(2) {
                     // For each tile, let's add one row of colors a time.
