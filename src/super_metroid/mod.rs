@@ -67,6 +67,30 @@ impl SuperMetroid {
         [&self.cre_tileset[..], &self.tile_tables[&tileset]].concat()
     }
 
+    pub fn get_state_data(
+        &self,
+        state: &State,
+    ) -> (&LevelData, &Tileset, &Palette, Gfx, TileTable) {
+        let level_data = &self.levels[&(state.level_address as usize)];
+        let tileset = &self.tilesets[state.tileset as usize];
+
+        let palette = &self.palettes[&(tileset.palette as usize)];
+
+        let graphics = if tileset.use_cre {
+            self.gfx_with_cre(tileset.graphic as usize)
+        } else {
+            self.graphics[&(tileset.graphic as usize)].clone()
+        };
+
+        let tile_table = if tileset.use_cre {
+            self.tile_table_with_cre(tileset.tile_table as usize)
+        } else {
+            self.tile_tables[&(tileset.tile_table as usize)].clone()
+        };
+
+        (level_data, tileset, palette, graphics, tile_table)
+    }
+
     pub fn save_to_rom(&mut self) -> HashMap<usize, usize> {
         let remapped_address = self.save_palettes_to_rom();
 
