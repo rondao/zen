@@ -13,6 +13,12 @@ pub struct Room {
     pub state_conditions: Vec<StateCondition>,
 }
 
+impl Room {
+    pub fn size(&self) -> (usize, usize) {
+        (self.width as usize, self.height as usize)
+    }
+}
+
 pub fn from_bytes(room_address: u16, source: &[u8]) -> Room {
     #[rustfmt::skip]
     let room = Room {
