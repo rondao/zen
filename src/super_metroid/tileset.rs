@@ -76,6 +76,13 @@ pub fn tileset_to_colors(tile_table: &TileTable, palette: &Palette, graphics: &G
     colors
 }
 
+pub fn tileset_size() -> [usize; 2] {
+    [
+        (TILESET_BLOCK_SIZE * TILE_TABLE_SIZE),
+        (TILESET_BLOCK_SIZE * TILE_TABLE_SIZE),
+    ]
+}
+
 #[cfg(test)]
 mod tests {
     use std::convert::TryInto;
