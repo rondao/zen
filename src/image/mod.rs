@@ -8,6 +8,8 @@ use crate::{
     },
     super_metroid::{
         level_data::{LevelData, BLOCKS_PER_SCREEN},
+        room::Room,
+        state::State,
         tile_table::{TileTable, TILE_TABLE_SIZE},
         tileset::{tileset_to_colors, TILESET_BLOCK_SIZE},
         SuperMetroid,
@@ -120,35 +122,9 @@ impl LevelData {
 }
 
 impl SuperMetroid {
-    pub fn room_to_image(&self, room_address: usize, state: usize) -> Option<RgbImage> {
-        if let Some(room) = self.rooms.get(&room_address) {
-            if let Some(state) = self
-                .states
-                .get(&(room.state_conditions[state].state_address as usize))
-            {
-                if let Some(level_data) = self.levels.get(&(state.level_address as usize)) {
-                    let tileset = self.tilesets[state.tileset as usize];
+    pub fn room_to_image(&self, room: &Room, state: &State) -> RgbImage {
+        let (level_data, _, palette, graphics, tile_table) = self.get_state_data(state);
 
-                    let tile_table = if tileset.use_cre {
-                        self.tile_table_with_cre(tileset.tile_table as usize)
-                    } else {
-                        self.tile_tables[&(tileset.tile_table as usize)].clone()
-                    };
-                    let graphics = if tileset.use_cre {
-                        self.gfx_with_cre(tileset.graphic as usize)
-                    } else {
-                        self.graphics[&(tileset.graphic as usize)].clone()
-                    };
-
-                    return Some(level_data.to_image(
-                        (room.width as usize, room.height as usize),
-                        &tile_table,
-                        &self.palettes[&(tileset.palette as usize)],
-                        &graphics,
-                    ));
-                }
-            }
-        }
-        None
+        level_data.to_image(room.size(), &tile_table, &palette, &graphics)
     }
 }

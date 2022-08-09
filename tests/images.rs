@@ -2,7 +2,7 @@ use std::fs;
 
 use zen::{
     image::tileset_to_image,
-    super_metroid::{self, address::ROOMS},
+    super_metroid::{self},
 };
 
 /// Convert Palettes to image after saving palettes to rom.
@@ -91,14 +91,17 @@ fn convert_super_metroid_rooms_to_image() {
     )
     .unwrap();
 
-    for address in ROOMS {
+    for (room_address, room) in sm.rooms.iter() {
         let expected_image = image::open(format!(
             "/home/rondao/dev/snes_data/test/{:x}.png",
-            *address
+            *room_address
         ))
         .unwrap();
-        let room_image = sm.room_to_image(*address, 0).unwrap();
 
+        let room_image = sm.room_to_image(
+            room,
+            &sm.states[&room.state_conditions[0].state_address.into()],
+        );
         assert_eq!(&room_image, expected_image.as_rgb8().unwrap());
     }
 }
