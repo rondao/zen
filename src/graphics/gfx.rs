@@ -69,7 +69,7 @@ pub fn from_4bpp(source: &[u8]) -> Gfx {
 
 impl Gfx {
     pub fn to_indexed_colors(&self) -> Vec<u8> {
-        let mut gfx_index_colors = Vec::new();
+        let mut gfx_index_colors = Vec::with_capacity(GFX_TILE_WIDTH * TILE_SIZE);
         // Loop each Tile row
         for row_of_tiles in self.tiles.chunks(GFX_TILE_WIDTH) {
             for tile_row_number in 0..TILE_SIZE {

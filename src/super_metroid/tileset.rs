@@ -45,7 +45,9 @@ pub fn from_bytes(source: &[u8]) -> Vec<Tileset> {
 }
 
 pub fn tileset_to_colors(tile_table: &TileTable, palette: &Palette, graphics: &Gfx) -> Vec<Rgb888> {
-    let mut colors = Vec::new();
+    let size = tileset_size();
+    let mut colors = Vec::with_capacity(size[0] * size[1]);
+
     // Add colors of each row of blocks a time. Each block is composed of 'TILES_BY_BLOCK' smaller 'TileGfx'.
     for row_of_blocks in tile_table.chunks(TILE_TABLE_SIZE * TILES_BY_BLOCK) {
         // Each block has two rows of tiles. Let's add colors for the top row of tiles, and then the bottow row.
