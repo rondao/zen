@@ -11,12 +11,8 @@ fn bench_palette_to_colors(b: &mut Bencher) {
     )
     .unwrap();
 
-    b.iter(|| -> Vec<_> {
-        sm.palettes
-            .values()
-            .map(|palette| palette.to_colors())
-            .collect()
-    });
+    let palette = &sm.palettes[&0xC2AD7C];
+    b.iter(|| -> Vec<_> { palette.to_colors() });
 }
 
 #[bench]
@@ -26,12 +22,8 @@ fn bench_gfx_to_colors(b: &mut Bencher) {
     )
     .unwrap();
 
-    b.iter(|| -> Vec<_> {
-        sm.graphics
-            .values()
-            .map(|gfx| gfx.to_indexed_colors())
-            .collect()
-    });
+    let gfx = &sm.graphics[&0xBAC629];
+    b.iter(|| -> Vec<_> { gfx.to_indexed_colors() });
 }
 
 #[bench]
@@ -41,17 +33,13 @@ fn bench_tileset_to_colors(b: &mut Bencher) {
     )
     .unwrap();
 
+    let tileset = &sm.tilesets[0];
     b.iter(|| -> Vec<_> {
-        sm.tilesets
-            .iter()
-            .map(|tileset| {
-                tileset_to_colors(
-                    &sm.tile_table_with_cre(tileset.tile_table as usize),
-                    &sm.palettes[&(tileset.palette as usize)],
-                    &sm.gfx_with_cre(tileset.graphic as usize),
-                )
-            })
-            .collect()
+        tileset_to_colors(
+            &sm.tile_table_with_cre(tileset.tile_table as usize),
+            &sm.palettes[&(tileset.palette as usize)],
+            &sm.gfx_with_cre(tileset.graphic as usize),
+        )
     });
 }
 
@@ -62,14 +50,10 @@ fn bench_room_to_colors(b: &mut Bencher) {
     )
     .unwrap();
 
+    let room = &sm.rooms[&0x8F91F8];
     b.iter(|| -> Vec<_> {
-        sm.rooms
-            .values()
-            .map(|room| {
-                let (level_data, _, palette, graphics, tile_table) =
-                    sm.get_state_data(&sm.states[&room.state_conditions[0].state_address.into()]);
-                level_data.to_colors(room.size(), &tile_table, palette, &graphics)
-            })
-            .collect()
+        let (level_data, _, palette, graphics, tile_table) =
+            sm.get_state_data(&sm.states[&room.state_conditions[0].state_address.into()]);
+        level_data.to_colors(room.size(), &tile_table, palette, &graphics)
     });
 }
