@@ -1,3 +1,7 @@
+use crate::graphics::gfx::TILE_SIZE;
+
+use super::level_data::BLOCKS_PER_SCREEN;
+
 /// Room format reference: https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#room_header
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Room {
@@ -16,6 +20,13 @@ pub struct Room {
 impl Room {
     pub fn size(&self) -> (usize, usize) {
         (self.width as usize, self.height as usize)
+    }
+
+    pub fn pixel_size(&self) -> (usize, usize) {
+        (
+            (BLOCKS_PER_SCREEN * TILE_SIZE * 2 * self.size().0),
+            (BLOCKS_PER_SCREEN * TILE_SIZE * 2 * self.size().1),
+        )
     }
 }
 
