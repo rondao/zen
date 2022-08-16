@@ -12,10 +12,10 @@ use super::tile_table::{TileTable, BLOCK_SIZE, TILES_BY_BLOCK};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Block {
-    pub block_type: u8,
-    pub y_flip: bool,
-    pub x_flip: bool,
-    pub block_number: u16,
+    pub block_type: u8,    // Specifies the primary type of the block.
+    pub y_flip: bool,      // Flips the graphics of the block at Y axis.
+    pub x_flip: bool,      // Flips the graphics of the block at X axis.
+    pub block_number: u16, // Specifies the index of the block into the tile table.
 }
 
 type BtsBlock = u8;
