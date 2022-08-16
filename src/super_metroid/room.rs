@@ -22,11 +22,18 @@ impl Room {
         (self.width as usize, self.height as usize)
     }
 
-    pub fn pixel_size(&self) -> (usize, usize) {
-        (
+    pub fn size_in_blocks(&self) -> [usize; 2] {
+        [
+            (BLOCKS_PER_SCREEN * self.size().0),
+            (BLOCKS_PER_SCREEN * self.size().1),
+        ]
+    }
+
+    pub fn size_in_pixels(&self) -> [usize; 2] {
+        [
             (BLOCKS_PER_SCREEN * TILE_SIZE * 2 * self.size().0),
             (BLOCKS_PER_SCREEN * TILE_SIZE * 2 * self.size().1),
-        )
+        ]
     }
 }
 
