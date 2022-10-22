@@ -18,7 +18,7 @@ pub struct Block {
     pub block_number: u16, // Specifies the index of the block into the tile table.
 }
 
-type BtsBlock = u8;
+pub type BtsBlock = u8;
 
 pub const BLOCKS_PER_SCREEN: usize = 16;
 
