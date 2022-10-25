@@ -1,4 +1,5 @@
 pub mod address;
+pub mod door;
 pub mod door_list;
 pub mod level_data;
 pub mod room;
@@ -22,14 +23,18 @@ use crate::{
     ParseError,
 };
 
-use address::{CRE_GFX, CRE_TILESET, DOORS, ROOMS, TILESETS};
+use address::{CRE_GFX, CRE_TILESET, DOORS_LIST, ROOMS, TILESETS};
 use door_list::DoorList;
 use level_data::LevelData;
 use room::Room;
 use state::State;
 use tile_table::TileTable;
 
-use self::tileset::Tileset;
+use self::{
+    address::DOORS,
+    door::{Door, DOOR_BYTE_SIZE},
+    tileset::Tileset,
+};
 
 // "21f3e98df4780ee1c667b84e57d88675"
 pub const UNHEADERED_MD5: [u8; 16] = [
@@ -48,7 +53,8 @@ pub struct SuperMetroid {
     pub levels: HashMap<usize, LevelData>,
     pub rooms: HashMap<usize, Room>,
     pub states: HashMap<usize, State>,
-    pub doors: HashMap<usize, DoorList>,
+    pub doors: HashMap<usize, Door>,
+    pub door_lists: HashMap<usize, DoorList>,
 }
 
 impl SuperMetroid {
@@ -229,17 +235,26 @@ pub fn load_unheadered_rom(data: Vec<u8>) -> Result<SuperMetroid, Box<dyn Error>
         ));
     }
 
+    // Load all Door Lists.
+    for door_list in DOORS_LIST {
+        sm.door_lists
+            .entry(door_list.1)
+            .or_insert(door_list::load_bytes(
+                door_list.0,
+                sm.rom.offset(
+                    LoRom {
+                        address: 0x8F_0000 + door_list.1 as usize,
+                    }
+                    .into(),
+                ),
+            ));
+    }
+
     // Load all Doors.
-    for door in DOORS {
-        sm.doors.entry(door.1).or_insert(door_list::load_bytes(
-            door.0,
-            sm.rom.offset(
-                LoRom {
-                    address: 0x8F_0000 + door.1 as usize,
-                }
-                .into(),
-            ),
-        ));
+    let mut address: usize = DOORS.1;
+    for door in door::load_bytes(DOORS.0, sm.rom.offset(LoRom { address }.into())) {
+        sm.doors.insert(address, door);
+        address += DOOR_BYTE_SIZE;
     }
 
     // Load all StateConditions, States and LevelData.

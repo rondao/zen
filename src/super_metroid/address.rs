@@ -37,7 +37,9 @@ pub const ROOMS: &[usize] = &[
     0x8FE0B5,
 ];
 
-pub const DOORS: &[(usize, usize)] = &[
+pub const DOORS: (usize, usize) = (379, 0x8388FE);
+
+pub const DOORS_LIST: &[(usize, usize)] = &[
     (4, 0x8F927B),
     (2, 0x8F92F9),
     (7, 0x8F9362),
