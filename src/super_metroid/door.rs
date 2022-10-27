@@ -1,4 +1,4 @@
-/// Room format reference: https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#door_header
+/// Door format reference: https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#door_header
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Door {
     pub destination_room: u16, // Destination room header pointer (bank $8F)

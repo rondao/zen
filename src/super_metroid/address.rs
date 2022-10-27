@@ -4,6 +4,11 @@ pub const CRE_TILESET: usize = 0xB9A09D;
 
 pub const TILESETS: usize = 0x8FE6A2;
 
+pub const SAVE_STATIONS_LIST: usize = 0x80C4B5;
+pub const NUMBER_OF_AREAS: usize = 8;
+
+pub const SAVE_STATIONS: usize = 0x80C4C5;
+
 pub const ROOMS: &[usize] = &[
     0x8F91F8, 0x8F92B3, 0x8F92FD, 0x8F93AA, 0x8F93D5, 0x8F93FE, 0x8F9461, 0x8F948C, 0x8F94CC,
     0x8F94FD, 0x8F9552, 0x8F957D, 0x8F95A8, 0x8F95D4, 0x8F95FF, 0x8F962A, 0x8F965B, 0x8F968F,

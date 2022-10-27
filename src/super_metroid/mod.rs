@@ -3,6 +3,7 @@ pub mod door;
 pub mod door_list;
 pub mod level_data;
 pub mod room;
+pub mod save_station;
 pub mod state;
 pub mod tile_table;
 pub mod tileset;
@@ -33,6 +34,7 @@ use tile_table::TileTable;
 use self::{
     address::DOORS,
     door::{Door, DOOR_BYTE_SIZE},
+    save_station::SaveStation,
     tileset::Tileset,
 };
 
@@ -55,6 +57,7 @@ pub struct SuperMetroid {
     pub states: HashMap<usize, State>,
     pub doors: HashMap<usize, Door>,
     pub door_lists: HashMap<usize, DoorList>,
+    pub save_stations: Vec<Vec<SaveStation>>,
 }
 
 impl SuperMetroid {
@@ -256,6 +259,23 @@ pub fn load_unheadered_rom(data: Vec<u8>) -> Result<SuperMetroid, Box<dyn Error>
         sm.doors.insert(address, door);
         address += DOOR_BYTE_SIZE;
     }
+
+    // Load all Save Stations.
+    sm.save_stations = save_station::load_all_from_list(
+        sm.rom.offset(
+            LoRom {
+                address: address::SAVE_STATIONS,
+            }
+            .into(),
+        ),
+        sm.rom.offset(
+            LoRom {
+                address: address::SAVE_STATIONS_LIST,
+            }
+            .into(),
+        ),
+        address::NUMBER_OF_AREAS,
+    );
 
     // Load all StateConditions, States and LevelData.
     for room in sm.rooms.values() {
