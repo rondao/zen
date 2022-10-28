@@ -35,6 +35,33 @@ impl Room {
             (BLOCKS_PER_SCREEN * TILE_SIZE * 2 * self.size().1),
         ]
     }
+
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut output = Vec::new();
+
+        output.extend([
+            self.index,
+            self.area,
+            self.map_position.0,
+            self.map_position.1,
+            self.width,
+            self.height,
+            self.up_scroller,
+            self.down_scroller,
+            self.cre_bitset,
+        ]);
+        output.extend(self.doors.to_le_bytes());
+
+        output.extend(self.state_conditions.iter().rev().fold(
+            Vec::new(),
+            |mut acc, state_condition| {
+                acc.extend(state_condition.to_bytes());
+                acc
+            },
+        ));
+
+        output
+    }
 }
 
 pub fn from_bytes(room_address: u16, source: &[u8]) -> Room {
@@ -61,6 +88,26 @@ pub struct StateCondition {
     pub condition: u16,
     pub parameter: Option<u16>,
     pub state_address: u16,
+}
+
+impl StateCondition {
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut output = Vec::new();
+
+        output.extend(self.condition.to_le_bytes());
+        if let Some(parameter) = self.parameter {
+            if self.condition == 0xE5EB {
+                output.extend(parameter.to_le_bytes());
+            } else if self.condition == 0xE612 || self.condition == 0xE629 {
+                output.push(parameter as u8);
+            }
+        }
+        if self.condition != 0xE5E6 {
+            output.extend(self.state_address.to_le_bytes());
+        }
+
+        output
+    }
 }
 
 fn state_conditions_from_bytes(default_state_address: u16, source: &[u8]) -> Vec<StateCondition> {

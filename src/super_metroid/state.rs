@@ -39,6 +39,38 @@ pub fn load_bytes(source: &[u8]) -> State {
     }
 }
 
+impl State {
+    pub fn to_bytes(&self) -> [u8; 26] {
+        [
+            self.level_address as u8,
+            (self.level_address >> 8) as u8,
+            (self.level_address >> 16) as u8,
+            self.tileset,
+            self.music_data_index,
+            self.music_track,
+            self.fx as u8,
+            (self.fx >> 8) as u8,
+            self.enemy_population as u8,
+            (self.enemy_population >> 8) as u8,
+            self.enemy_set as u8,
+            (self.enemy_set >> 8) as u8,
+            self.layer_2_x_scroll,
+            self.layer_2_y_scroll,
+            self.scroll as u8,
+            (self.scroll >> 8) as u8,
+            self.special_x_ray_blocks as u8,
+            (self.special_x_ray_blocks >> 8) as u8,
+            self.main_asm as u8,
+            (self.main_asm >> 8) as u8,
+            self.plm_population as u8,
+            (self.plm_population >> 8) as u8,
+            self.library_background as u8,
+            (self.library_background >> 8) as u8,
+            self.setup_asm as u8,
+            (self.setup_asm >> 8) as u8,
+        ]
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;

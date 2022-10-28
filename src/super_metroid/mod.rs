@@ -100,8 +100,9 @@ impl SuperMetroid {
         (level_data, tileset, palette, graphics, tile_table)
     }
 
-    pub fn save_to_rom(&mut self) -> HashMap<usize, usize> {
-        let remapped_address = self.save_palettes_to_rom();
+    pub fn save_to_rom(&mut self) {
+        self.save_palettes_to_rom();
+        self.save_level_data_to_rom();
 
         // Write tilesets to ROM.
         let tileset_address: Pc = LoRom { address: TILESETS }.into();
@@ -113,8 +114,6 @@ impl SuperMetroid {
             tileset_address.address..tileset_address.address + tilesets_as_bytes.len(),
             tilesets_as_bytes,
         );
-
-        remapped_address
     }
 
     pub fn save_to_file(&mut self, filename: &str) -> std::io::Result<()> {
@@ -151,6 +150,55 @@ impl SuperMetroid {
         // Tileset addresses references needs to be changed accordingly.
         for tileset in self.tilesets.iter_mut() {
             tileset.palette = remapped_addresses[&(tileset.palette as usize)] as u32;
+        }
+
+        remapped_addresses
+    }
+
+    pub fn save_level_data_to_rom(&mut self) -> HashMap<usize, usize> {
+        let mut remapped_addresses: HashMap<usize, usize> = HashMap::new();
+        let mut pc_to_write: Pc = LoRom { address: 0xC2C2BB }.into();
+
+        // Compress every level data and save to ROM.
+        for (level_address, level) in self.levels.iter() {
+            let level_compressed_bytes = lz5_compress(&level.to_bytes());
+            let number_of_bytes = level_compressed_bytes.len();
+
+            self.rom.splice(
+                pc_to_write.address..pc_to_write.address + number_of_bytes,
+                level_compressed_bytes,
+            );
+
+            remapped_addresses.insert(*level_address, LoRom::from(pc_to_write).address);
+            pc_to_write.address += number_of_bytes;
+        }
+
+        // Update levels list addresses.
+        self.levels = self
+            .levels
+            .iter()
+            .fold(HashMap::new(), |mut accum, (address, level)| {
+                accum.insert(remapped_addresses[address], level.clone());
+                accum
+            });
+
+        // State addresses references to Levels needs to be changed accordingly.
+        for state in self.states.values_mut() {
+            state.level_address = remapped_addresses[&(state.level_address as usize)] as u32;
+        }
+
+        // Save all Rooms in-place. TODO: They should be saved in any place.
+        for (room_address, room) in &self.rooms {
+            let room_data = room.to_bytes();
+            let pc_to_write: Pc = LoRom {
+                address: *room_address,
+            }
+            .into();
+
+            self.rom.splice(
+                pc_to_write.address..pc_to_write.address + room_data.len(),
+                room_data,
+            );
         }
 
         remapped_addresses
@@ -260,23 +308,6 @@ pub fn load_unheadered_rom(data: Vec<u8>) -> Result<SuperMetroid, Box<dyn Error>
         address += DOOR_BYTE_SIZE;
     }
 
-    // Load all Save Stations.
-    sm.save_stations = save_station::load_all_from_list(
-        sm.rom.offset(
-            LoRom {
-                address: address::SAVE_STATIONS,
-            }
-            .into(),
-        ),
-        sm.rom.offset(
-            LoRom {
-                address: address::SAVE_STATIONS_LIST,
-            }
-            .into(),
-        ),
-        address::NUMBER_OF_AREAS,
-    );
-
     // Load all StateConditions, States and LevelData.
     for room in sm.rooms.values() {
         for state_condition in room.state_conditions.iter() {
@@ -319,6 +350,23 @@ pub fn load_unheadered_rom(data: Vec<u8>) -> Result<SuperMetroid, Box<dyn Error>
             }
         }
     }
+
+    // Load all Save Stations.
+    sm.save_stations = save_station::load_all_from_list(
+        sm.rom.offset(
+            LoRom {
+                address: address::SAVE_STATIONS,
+            }
+            .into(),
+        ),
+        sm.rom.offset(
+            LoRom {
+                address: address::SAVE_STATIONS_LIST,
+            }
+            .into(),
+        ),
+        address::NUMBER_OF_AREAS,
+    );
 
     Ok(sm)
 }
