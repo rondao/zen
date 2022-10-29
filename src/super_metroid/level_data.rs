@@ -87,7 +87,7 @@ impl LevelData {
         let layer_size = (self.layer1.len() * 2) as u16;
         output.extend(layer_size.to_le_bytes());
 
-        output.append(self.layer1.iter().fold(&mut Vec::new(), |acc, block| {
+        output.extend(self.layer1.iter().fold(Vec::new(), |mut acc, block| {
             acc.extend(block.to_bytes());
             acc
         }));
@@ -187,10 +187,8 @@ impl Block {
         let y_flip = if self.y_flip { 1 } else { 0 };
         let x_flip = if self.x_flip { 1 } else { 0 };
 
-        [
-            self.block_number as u8,
-            self.block_type << 4 & y_flip << 3 & x_flip << 2 & (self.block_number >> 8) as u8,
-        ]
+        (self.block_number | ((self.block_type as u16) << 12) | (y_flip << 11) | (x_flip << 10))
+            .to_le_bytes()
     }
 }
 
