@@ -10,6 +10,20 @@ pub struct SaveStation {
     pub samus_x_offset: u16, // Relative to screen center.
 }
 
+impl SaveStation {
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut output = Vec::new();
+        output.extend(self.room_pointer.to_le_bytes());
+        output.extend(self.door_pointer.to_le_bytes());
+        output.extend(self.door_bts.to_le_bytes());
+        output.extend(self.screen_x_position.to_le_bytes());
+        output.extend(self.screen_y_position.to_le_bytes());
+        output.extend(self.samus_y_offset.to_le_bytes());
+        output.extend(self.samus_x_offset.to_le_bytes());
+        output
+    }
+}
+
 pub const SAVE_STATION_BYTE_SIZE: usize = 14;
 
 // Load all Save Stations from one area until the next.
