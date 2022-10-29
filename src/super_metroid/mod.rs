@@ -190,14 +190,27 @@ impl SuperMetroid {
         // Save all Rooms in-place. TODO: They should be saved in any place.
         for (room_address, room) in &self.rooms {
             let room_data = room.to_bytes();
-            let pc_to_write: Pc = LoRom {
+            let pc_to_write_room: Pc = LoRom {
                 address: *room_address,
             }
             .into();
 
+            let room_end_address = pc_to_write_room.address + room_data.len();
+            self.rom
+                .splice(pc_to_write_room.address..room_end_address, room_data);
+
+            let states_data =
+                room.state_conditions
+                    .iter()
+                    .fold(Vec::new(), |mut acc, state_condition| {
+                        acc.extend(
+                            self.states[&(state_condition.state_address as usize)].to_bytes(),
+                        );
+                        acc
+                    });
             self.rom.splice(
-                pc_to_write.address..pc_to_write.address + room_data.len(),
-                room_data,
+                room_end_address..room_end_address + states_data.len(),
+                states_data,
             );
         }
 

@@ -7,6 +7,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         "/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc",
     )?)?;
 
+    sm.save_to_rom();
     sm.save_to_file("/home/rondao/roms/snes/MyHack.smc")
         .unwrap();
 
