@@ -164,13 +164,14 @@ impl LevelData {
                     if *index_color != 0 {
                         let pixel_per_width = BLOCKS_PER_SCREEN * size.0;
 
-                        let y = (i_block / pixel_per_width)
-                            * (BLOCKS_PER_SCREEN * pixel_per_width * BLOCK_SIZE)
-                            + (i_tile / 2) * TILE_SIZE * pixel_per_width * BLOCK_SIZE
-                            + (i_color / TILE_SIZE) * pixel_per_width * BLOCK_SIZE;
+                        #[rustfmt::skip]
+                        let y = (i_block / pixel_per_width) * pixel_per_width * BLOCK_SIZE * BLOCK_SIZE
+                              + (i_tile / 2)                * pixel_per_width * BLOCK_SIZE * TILE_SIZE
+                              + (i_color / TILE_SIZE)       * pixel_per_width * BLOCK_SIZE;
+                        #[rustfmt::skip]
                         let x = (i_block % pixel_per_width) * BLOCK_SIZE
-                            + (i_tile % 2) * TILE_SIZE
-                            + (i_color % TILE_SIZE);
+                              + (i_tile % 2)                * TILE_SIZE
+                              + (i_color % TILE_SIZE);
 
                         colors[y + x] = palette.sub_palettes[tile.sub_palette as usize].colors
                             [*index_color as usize]
