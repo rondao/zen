@@ -83,6 +83,13 @@ impl SuperMetroid {
         let level_data = &self.levels[&(state.level_address as usize)];
         let tileset = &self.tilesets[state.tileset as usize];
 
+        let (palette, graphics, tile_table) = self.get_tileset_data(state.tileset as usize);
+        (level_data, tileset, palette, graphics, tile_table)
+    }
+
+    pub fn get_tileset_data(&self, tileset_index: usize) -> (&Palette, Gfx, TileTable) {
+        let tileset = &self.tilesets[tileset_index];
+
         let palette = &self.palettes[&(tileset.palette as usize)];
 
         let graphics = if tileset.use_cre {
@@ -97,7 +104,7 @@ impl SuperMetroid {
             self.tile_tables[&(tileset.tile_table as usize)].clone()
         };
 
-        (level_data, tileset, palette, graphics, tile_table)
+        (palette, graphics, tile_table)
     }
 
     pub fn save_to_rom(&mut self) {
