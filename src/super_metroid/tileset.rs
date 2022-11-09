@@ -44,7 +44,7 @@ pub fn from_bytes(source: &[u8]) -> Vec<Tileset> {
         .collect()
 }
 
-pub fn tileset_to_colors(tile_table: &TileTable, palette: &Palette, graphics: &Gfx) -> Vec<Rgb888> {
+pub fn tileset_to_indexed_colors(tile_table: &TileTable, graphics: &Gfx) -> Vec<(usize, usize)> {
     let size = tileset_size();
     let mut colors = Vec::with_capacity(size[0] * size[1]);
 
@@ -56,19 +56,16 @@ pub fn tileset_to_colors(tile_table: &TileTable, palette: &Palette, graphics: &G
             for tile_color_row in (0..TILE_SIZE * TILE_SIZE).step_by(TILE_SIZE) {
                 // Let's loop the top and bottom row of tiles for each row of blocks.
                 for row_of_tiles in row_of_blocks.chunks(2).skip(tile_row).step_by(2) {
-                    // For each tile, let's add one row of colors a time.
+                    // For each tile, let's add one row of indexed colors a time.
                     for tile in row_of_tiles {
-                        colors.extend::<Vec<Rgb888>>(
+                        colors.extend(
                             graphics.tiles[tile.gfx_index as usize]
                                 .flip((tile.x_flip, tile.y_flip))
                                 [tile_color_row..tile_color_row + TILE_SIZE]
                                 .iter()
                                 .map(|index_color| {
-                                    palette.sub_palettes[tile.sub_palette as usize].colors
-                                        [*index_color as usize]
-                                        .into()
-                                })
-                                .collect(),
+                                    (*index_color as usize, tile.sub_palette as usize)
+                                }),
                         )
                     }
                 }
@@ -76,6 +73,15 @@ pub fn tileset_to_colors(tile_table: &TileTable, palette: &Palette, graphics: &G
         }
     }
     colors
+}
+
+pub fn tileset_to_colors(tile_table: &TileTable, palette: &Palette, graphics: &Gfx) -> Vec<Rgb888> {
+    tileset_to_indexed_colors(tile_table, graphics)
+        .iter()
+        .map(|(index_color, sub_palette)| {
+            palette.sub_palettes[*sub_palette].colors[*index_color].into()
+        })
+        .collect()
 }
 
 pub fn tileset_size() -> [usize; 2] {
