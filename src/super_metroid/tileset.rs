@@ -1,6 +1,7 @@
 use crate::graphics::{
     gfx::{Gfx, TILE_SIZE},
     palette::{Palette, Rgb888},
+    IndexedColor,
 };
 
 use super::tile_table::{TileTable, TILES_BY_BLOCK, TILE_TABLE_SIZE};
@@ -44,7 +45,7 @@ pub fn from_bytes(source: &[u8]) -> Vec<Tileset> {
         .collect()
 }
 
-pub fn tileset_to_indexed_colors(tile_table: &TileTable, graphics: &Gfx) -> Vec<(usize, usize)> {
+pub fn tileset_to_indexed_colors(tile_table: &TileTable, graphics: &Gfx) -> Vec<IndexedColor> {
     let size = tileset_size();
     let mut colors = Vec::with_capacity(size[0] * size[1]);
 
@@ -63,8 +64,9 @@ pub fn tileset_to_indexed_colors(tile_table: &TileTable, graphics: &Gfx) -> Vec<
                                 .flip((tile.x_flip, tile.y_flip))
                                 [tile_color_row..tile_color_row + TILE_SIZE]
                                 .iter()
-                                .map(|index_color| {
-                                    (*index_color as usize, tile.sub_palette as usize)
+                                .map(|index_color| IndexedColor {
+                                    index: *index_color as usize,
+                                    sub_palette: tile.sub_palette as usize,
                                 }),
                         )
                     }
@@ -78,8 +80,8 @@ pub fn tileset_to_indexed_colors(tile_table: &TileTable, graphics: &Gfx) -> Vec<
 pub fn tileset_to_colors(tile_table: &TileTable, palette: &Palette, graphics: &Gfx) -> Vec<Rgb888> {
     tileset_to_indexed_colors(tile_table, graphics)
         .iter()
-        .map(|(index_color, sub_palette)| {
-            palette.sub_palettes[*sub_palette].colors[*index_color].into()
+        .map(|tile_color| {
+            palette.sub_palettes[tile_color.sub_palette].colors[tile_color.index].into()
         })
         .collect()
 }

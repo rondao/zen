@@ -4,6 +4,7 @@ use crate::{
     graphics::{
         gfx::{Gfx, TILE_SIZE},
         palette::{Palette, Rgb888},
+        IndexedColor,
     },
     ParseError,
 };
@@ -109,32 +110,44 @@ impl LevelData {
         palette: &Palette,
         graphics: &Gfx,
     ) -> Vec<Rgb888> {
+        self.to_indexed_colors(size, tile_table, graphics)
+            .iter()
+            .map(|indexed_color| {
+                palette.sub_palettes[indexed_color.sub_palette].colors[indexed_color.index].into()
+            })
+            .collect()
+    }
+
+    pub fn to_indexed_colors(
+        &self,
+        size: (usize, usize),
+        tile_table: &TileTable,
+        graphics: &Gfx,
+    ) -> Vec<IndexedColor> {
         let pixels_per_side = BLOCKS_PER_SCREEN * BLOCK_SIZE;
-        let mut colors =
-            vec![Rgb888::default(); pixels_per_side * size.0 * pixels_per_side * size.1];
+        let mut indexed_colors =
+            vec![IndexedColor::default(); pixels_per_side * size.0 * pixels_per_side * size.1];
 
         if let Some(layer2) = &self.layer2 {
-            self.layer_to_colors(size, &mut colors, &layer2, tile_table, palette, graphics);
+            self.layer_to_indexed_colors(size, &mut indexed_colors, &layer2, tile_table, graphics);
         }
-        self.layer_to_colors(
+        self.layer_to_indexed_colors(
             size,
-            &mut colors,
+            &mut indexed_colors,
             &self.layer1,
             tile_table,
-            palette,
             graphics,
         );
 
-        colors
+        indexed_colors
     }
 
-    fn layer_to_colors<'a>(
+    fn layer_to_indexed_colors(
         &self,
         size: (usize, usize),
-        colors: &mut Vec<Rgb888>,
+        indexed_colors: &mut Vec<IndexedColor>,
         blocks: &Vec<Block>,
         tile_table: &TileTable,
-        palette: &Palette,
         graphics: &Gfx,
     ) {
         for i_block in 0..(BLOCKS_PER_SCREEN * size.0 * BLOCKS_PER_SCREEN * size.1) {
@@ -173,9 +186,10 @@ impl LevelData {
                               + (i_tile % 2)                * TILE_SIZE
                               + (i_color % TILE_SIZE);
 
-                        colors[y + x] = palette.sub_palettes[tile.sub_palette as usize].colors
-                            [*index_color as usize]
-                            .into();
+                        indexed_colors[y + x] = IndexedColor {
+                            index: *index_color as usize,
+                            sub_palette: tile.sub_palette as usize,
+                        };
                     }
                 }
             }
