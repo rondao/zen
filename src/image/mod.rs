@@ -108,7 +108,6 @@ impl LevelData {
         );
         for (color_number, color) in self
             .to_colors(size, tile_table, palette, graphics)
-            .iter()
             .enumerate()
         {
             image.put_pixel(

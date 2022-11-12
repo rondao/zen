@@ -103,19 +103,18 @@ impl LevelData {
         output
     }
 
-    pub fn to_colors(
-        &self,
+    pub fn to_colors<'s, 'p: 's>(
+        &'s self,
         size: (usize, usize),
         tile_table: &TileTable,
-        palette: &Palette,
+        palette: &'p Palette,
         graphics: &Gfx,
-    ) -> Vec<Rgb888> {
+    ) -> impl Iterator<Item = Rgb888> + '_ {
         self.to_indexed_colors(size, tile_table, graphics)
-            .iter()
-            .map(|indexed_color| {
+            .into_iter()
+            .map(move |indexed_color: IndexedColor| {
                 palette.sub_palettes[indexed_color.sub_palette].colors[indexed_color.index].into()
             })
-            .collect()
     }
 
     pub fn to_indexed_colors(
