@@ -13,10 +13,31 @@ use super::tile_table::{TileTable, BLOCK_SIZE, TILES_BY_BLOCK};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Block {
-    pub block_type: u8,    // Specifies the primary type of the block.
-    pub y_flip: bool,      // Flips the graphics of the block at Y axis.
-    pub x_flip: bool,      // Flips the graphics of the block at X axis.
-    pub block_number: u16, // Specifies the index of the block into the tile table.
+    pub block_type: BlockType, // Specifies the primary type of the block.
+    pub y_flip: bool,          // Flips the graphics of the block at Y axis.
+    pub x_flip: bool,          // Flips the graphics of the block at X axis.
+    pub block_number: u16,     // Specifies the index of the block into the tile table.
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
+pub enum BlockType {
+    #[default]
+    Air,
+    Slope,
+    AirSpike,
+    AirSpecial,
+    AirShootable,
+    HorizontalExtension,
+    AirUnused,
+    AirBombable,
+    Solid,
+    Door,
+    SolidSpike,
+    SolidSpecial,
+    SolidShootable,
+    VerticalExtension,
+    SolidGrapple,
+    SolidBombable,
 }
 
 pub type BtsBlock = u8;
@@ -28,6 +49,30 @@ pub struct LevelData {
     pub layer1: Vec<Block>,
     pub bts: Vec<BtsBlock>,
     pub layer2: Option<Vec<Block>>,
+}
+
+impl From<u16> for BlockType {
+    fn from(value: u16) -> Self {
+        match value {
+            0x0 => Self::Air,
+            0x1 => Self::Slope,
+            0x2 => Self::AirSpike,
+            0x3 => Self::AirSpecial,
+            0x4 => Self::AirShootable,
+            0x5 => Self::HorizontalExtension,
+            0x6 => Self::AirUnused,
+            0x7 => Self::AirBombable,
+            0x8 => Self::Solid,
+            0x9 => Self::Door,
+            0xA => Self::SolidSpike,
+            0xB => Self::SolidSpecial,
+            0xC => Self::SolidShootable,
+            0xD => Self::VerticalExtension,
+            0xE => Self::SolidGrapple,
+            0xF => Self::SolidBombable,
+            _ => Self::Air,
+        }
+    }
 }
 
 /// Level Data format reference: https://wiki.metroidconstruction.com/doku.php?id=super:technical_information:data_structures#level_data
@@ -72,7 +117,7 @@ fn layer_from_bytes(source: &[u8]) -> Vec<Block> {
         .map(|block_data| {
             let two_bytes = u16::from_le_bytes(block_data.try_into().unwrap());
             Block {
-                block_type:  ((two_bytes & 0b1111_0000_0000_0000) >> 12) as u8,
+                block_type:  ((two_bytes & 0b1111_0000_0000_0000) >> 12).into(),
                 y_flip:       (two_bytes & 0b0000_1000_0000_0000) != 0,
                 x_flip:       (two_bytes & 0b0000_0100_0000_0000) != 0,
                 block_number: (two_bytes & 0b0000_0011_1111_1111) as u16,
@@ -215,25 +260,25 @@ mod tests {
     fn load_one_level_layer_from_bytes() {
         let expected_blocks = vec![
             Block {
-                block_type: 0b0000,
+                block_type: 0b0000.into(),
                 y_flip: false,
                 x_flip: false,
                 block_number: 0b00_0000_0000,
             },
             Block {
-                block_type: 0b0101,
+                block_type: 0b0101.into(),
                 y_flip: true,
                 x_flip: false,
                 block_number: 0b01_0101_0101,
             },
             Block {
-                block_type: 0b1010,
+                block_type: 0b1010.into(),
                 y_flip: false,
                 x_flip: true,
                 block_number: 0b10_1010_1010,
             },
             Block {
-                block_type: 0b1111,
+                block_type: 0b1111.into(),
                 y_flip: true,
                 x_flip: true,
                 block_number: 0b11_1111_1111,
@@ -258,13 +303,13 @@ mod tests {
         let mut expected_level_data = LevelData {
             layer1: vec![
                 Block {
-                    block_type: 0b0000,
+                    block_type: 0b0000.into(),
                     y_flip: false,
                     x_flip: false,
                     block_number: 0b00_0000_0000,
                 },
                 Block {
-                    block_type: 0b1111,
+                    block_type: 0b1111.into(),
                     y_flip: true,
                     x_flip: true,
                     block_number: 0b11_1111_1111,
@@ -290,13 +335,13 @@ mod tests {
         // Add a layer 2 for another test.
         expected_level_data.layer2 = Some(vec![
             Block {
-                block_type: 0b0101,
+                block_type: 0b0101.into(),
                 y_flip: true,
                 x_flip: false,
                 block_number: 0b01_0101_0101,
             },
             Block {
-                block_type: 0b1010,
+                block_type: 0b1010.into(),
                 y_flip: false,
                 x_flip: true,
                 block_number: 0b10_1010_1010,
