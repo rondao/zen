@@ -19,7 +19,7 @@ pub struct Block {
     pub block_number: u16,     // Specifies the index of the block into the tile table.
 }
 
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
+#[derive(Debug, Default, Clone, Copy, Hash, Eq, PartialEq)]
 pub enum BlockType {
     #[default]
     Air,
@@ -51,8 +51,8 @@ pub struct LevelData {
     pub layer2: Option<Vec<Block>>,
 }
 
-impl From<u16> for BlockType {
-    fn from(value: u16) -> Self {
+impl From<usize> for BlockType {
+    fn from(value: usize) -> Self {
         match value {
             0x0 => Self::Air,
             0x1 => Self::Slope,
@@ -72,6 +72,24 @@ impl From<u16> for BlockType {
             0xF => Self::SolidBombable,
             _ => Self::Air,
         }
+    }
+}
+
+impl From<u16> for BlockType {
+    fn from(value: u16) -> Self {
+        (value as usize).into()
+    }
+}
+
+impl From<u8> for BlockType {
+    fn from(value: u8) -> Self {
+        (value as usize).into()
+    }
+}
+
+impl From<i32> for BlockType {
+    fn from(value: i32) -> Self {
+        (value as usize).into()
     }
 }
 
