@@ -407,6 +407,7 @@ mod tests {
 
     /// Load Super Metroid data from rom.
     #[test]
+    #[ignore = "Requires ROM data to run, which is Copyrighted."]
     fn load_super_metroid_data_from_rom() {
         assert!(load_unheadered_rom(
             fs::read("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc").unwrap()
@@ -416,6 +417,7 @@ mod tests {
 
     /// Fail to load Super Metroid data from incorrect rom data.
     #[test]
+    #[ignore = "TODO: Create generic file to represent incorrect ROM data."]
     fn load_super_metroid_data_from_incorrect_rom() {
         assert!(load_unheadered_rom(
             fs::read("/home/rondao/dev/snes_data/test/Incorrect Super Metroid.smc").unwrap()

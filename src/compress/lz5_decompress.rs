@@ -160,6 +160,7 @@ mod tests {
 
     /// Test the Lz5 decompression.
     #[test]
+    #[ignore = "Requires ROM data to run, which is Copyrighted."]
     fn decompress_files_with_lz5() {
         let test_dir = "/home/rondao/dev/snes_data/test";
         let test_cases = [

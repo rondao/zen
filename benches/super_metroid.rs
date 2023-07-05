@@ -8,6 +8,7 @@ use zen::super_metroid::{
 };
 
 #[bench]
+#[ignore = "Requires ROM data to run, which is Copyrighted."]
 fn bench_palette_to_colors(b: &mut Bencher) {
     let sm = super_metroid::load_unheadered_rom(
         std::fs::read("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc").unwrap(),
@@ -19,6 +20,7 @@ fn bench_palette_to_colors(b: &mut Bencher) {
 }
 
 #[bench]
+#[ignore = "Requires ROM data to run, which is Copyrighted."]
 fn bench_gfx_to_colors(b: &mut Bencher) {
     let sm = super_metroid::load_unheadered_rom(
         std::fs::read("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc").unwrap(),
@@ -30,6 +32,7 @@ fn bench_gfx_to_colors(b: &mut Bencher) {
 }
 
 #[bench]
+#[ignore = "Requires ROM data to run, which is Copyrighted."]
 fn bench_tileset_to_colors(b: &mut Bencher) {
     let sm = super_metroid::load_unheadered_rom(
         std::fs::read("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc").unwrap(),
@@ -47,6 +50,7 @@ fn bench_tileset_to_colors(b: &mut Bencher) {
 }
 
 #[bench]
+#[ignore = "Requires ROM data to run, which is Copyrighted."]
 fn bench_tileset_to_indexed_colors(b: &mut Bencher) {
     let sm = super_metroid::load_unheadered_rom(
         std::fs::read("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc").unwrap(),
@@ -63,6 +67,7 @@ fn bench_tileset_to_indexed_colors(b: &mut Bencher) {
 }
 
 #[bench]
+#[ignore = "Requires ROM data to run, which is Copyrighted."]
 fn bench_room_to_colors(b: &mut Bencher) {
     let sm = super_metroid::load_unheadered_rom(
         std::fs::read("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc").unwrap(),

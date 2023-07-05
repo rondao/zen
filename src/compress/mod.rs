@@ -27,6 +27,7 @@ mod tests {
     /// Test the Lz5 compression.
     /// Certify that we can obtain the same data by decompressing it.
     #[test]
+    #[ignore = "Requires ROM data to run, which is Copyrighted."]
     fn compress_files_with_lz5() {
         let test_dir = "/home/rondao/dev/snes_data/test";
         let test_cases = [

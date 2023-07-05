@@ -7,6 +7,7 @@ use zen::{
 
 /// Convert Palettes to image after saving palettes to rom.
 #[test]
+#[ignore = "Requires ROM data to run, which is Copyrighted."]
 fn convert_super_metroid_palettes_to_image() {
     let mut sm = super_metroid::load_unheadered_rom(
         fs::read("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc").unwrap(),
@@ -30,6 +31,7 @@ fn convert_super_metroid_palettes_to_image() {
 
 /// Convert Gfx to image.
 #[test]
+#[ignore = "Requires ROM data to run, which is Copyrighted."]
 fn convert_super_metroid_gfxs_to_image() {
     let sm = super_metroid::load_unheadered_rom(
         fs::read("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc").unwrap(),
@@ -52,6 +54,7 @@ fn convert_super_metroid_gfxs_to_image() {
 
 /// Convert Tileset to image.
 #[test]
+#[ignore = "Requires ROM data to run, which is Copyrighted."]
 fn convert_super_metroid_tilesets_to_image() {
     let sm = super_metroid::load_unheadered_rom(
         fs::read("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc").unwrap(),
@@ -85,6 +88,7 @@ fn convert_super_metroid_tilesets_to_image() {
 
 /// Convert Rooms to image.
 #[test]
+#[ignore = "Requires ROM data to run, which is Copyrighted."]
 fn convert_super_metroid_rooms_to_image() {
     let sm = super_metroid::load_unheadered_rom(
         fs::read("/home/rondao/dev/snes_data/test/Super Metroid (JU) [!].smc").unwrap(),
